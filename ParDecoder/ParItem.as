@@ -170,6 +170,7 @@ namespace TextEngine
 									else
 									{
 										@currentitemvalue = null;
+									
 									}
 								}
 								else
@@ -331,6 +332,7 @@ namespace TextEngine
 							}
 							@lastvalue = null;
 							@xoperator = null;
+							@previtem = @current;
 							continue;
 						}
 						string opstr = current.Value.ToString();
@@ -370,6 +372,7 @@ namespace TextEngine
 									}
 								}
 								@lastvalue = null;
+								@previtem = @current;
 								continue;
 
 

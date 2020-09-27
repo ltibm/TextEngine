@@ -4,18 +4,49 @@ namespace TextEngine
 	{
 		class IncludeEvulator : BaseEvulator
 		{
+			private string GetFileName(TextEngine::Text::TextElement@ tag, dictionary@ vars)
+			{
+				bool allowjoker = tag.GetAttribute("joker") == "true";
+				string loc = tag.GetAttribute("name");
+				loc = this.EvulateText(loc, @vars).ToString();
+				if(!allowjoker || loc.IsEmpty()) return loc;
+				uint find = loc.FindLastOf(".");
+				string extension = "";
+				if(find != String::INVALID_INDEX)
+				{
+					extension = loc.SubString(find);
+					loc = loc.SubString(0, find);
+				}
+	
+				string new_loc = loc + extension;
+				//g_EngineFuncs.ServerPrint("location: " + new_loc);    
+				if(!FILEUTIL::Exists(new_loc))
+				{
+					int ilen = loc.Length();
+					for(int i = ilen - 1; i > 0; i--)
+					{
+						if(loc[i] == "/" || loc[i] == "\\") break;
+						new_loc = loc.SubString(0, i) + "+" + extension;
+						if(FILEUTIL::Exists(new_loc))
+						{
+							break;
+						}
+					}
+				}
+				return new_loc;
+			}
 			private string GetLocation(TextEngine::Text::TextElement@ tag, dictionary@ vars)
 			{
-				string loc = tag.GetAttribute("name");
-				Object@ evresult = this.EvulateText(loc, @vars);
-				loc = evresult.ToString();
+				string loc = this.GetFileName(@tag, @vars);
+				//Object@ evresult = this.EvulateText(loc, @vars);
+				//loc = evresult.ToString();
 				if(FILEUTIL::Exists(loc)) return loc;
 				uint total = 1;
 				while(true)
 				{
 					loc = tag.GetAttribute("alternate" + total++);
 					if(loc.IsEmpty()) break;
-					@evresult = @this.EvulateText(loc, @vars);
+					Object@ evresult = @this.EvulateText(loc, @vars);
 					loc = evresult.ToString();
 					if(FILEUTIL::Exists(loc)) return loc;
 				}
@@ -24,11 +55,12 @@ namespace TextEngine
 			private TextEngine::Text::TextEvulateResult@ RenderDefault(TextEngine::Text::TextElement@ tag, dictionary@ vars)
 			{
 				if(!this.ConditionSuccess(@tag, "if")) return null;
-			    string loc = GetLocation(@tag, @vars);
+			    string loc = this.GetFileName(@tag, @vars);
 				if(loc.IsEmpty()) return null;
 				string parse = tag.GetAttribute("parse", "true");
 				string content = FILEUTIL::ReadAllText(loc);
 				if(content.IsEmpty()) return null;
+
 				TextEngine::Text::TextEvulateResult@ result = TextEngine::Text::TextEvulateResult();
 				if (parse == "false")
 				{

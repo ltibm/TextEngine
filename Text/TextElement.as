@@ -573,6 +573,7 @@ namespace TextEngine
 					TextElement@ subElement = this.SubElements[i];
 					if(subElement is null) continue;
 					TextEngine::Evulator::BaseEvulator@ targetType = null;
+	
 					if (subElement.ElementType == Parameter)
 					{
 						@targetType = @this.BaseEvulator.EvulatorTypes.Param;

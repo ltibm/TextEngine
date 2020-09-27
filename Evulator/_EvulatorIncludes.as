@@ -9,4 +9,5 @@
 #include "ReturnEvulator"
 #include "SwitchEvulator"
 #include "NoPrintEvulator"
+#include "SetEvulator"
 

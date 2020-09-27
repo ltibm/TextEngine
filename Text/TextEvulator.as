@@ -132,6 +132,18 @@ namespace TextEngine
 					@globalParameters = @value;
 				}
 			}
+			private dictionary@ defineParameters;
+			dictionary@ DefineParameters
+			{
+				get const
+				{
+					return defineParameters;
+				}
+				set
+				{
+					@defineParameters = @value;
+				}
+			}
 			private DictionaryList@ localVariables;
 			DictionaryList@ LocalVariables
 			{
@@ -303,6 +315,8 @@ namespace TextEngine
 			TextEvulator(string text = "", bool isfile = false)
 			{
 				@this.LocalVariables = @DictionaryList();
+				@this.DefineParameters = @dictionary();
+				this.LocalVariables.Add(@this.DefineParameters);
 				@this.EvulatorTypes = @TextEngine::Evulator::EvulatorTypes();
 				@this.Elements = TextElement();
 				this.Elements.ElemName = "#document";
@@ -330,10 +344,11 @@ namespace TextEngine
 			{
 				this.ConditionalTags.insertLast("if");
 				this.ConditionalTags.insertLast("include");
+				this.ConditionalTags.insertLast("set");
 			}
 			void InitAutoClosed()
 			{
-				this.autoclosedtags = {"elif", "else", "return", "break", "continue", "include", "cm"};
+				this.autoclosedtags = {"elif", "else", "return", "break", "continue", "include", "cm", "set"};
 			}
 			void InitEvulator()
 			{
@@ -346,6 +361,8 @@ namespace TextEngine
 				@this.EvulatorTypes["break"] = @TextEngine::Evulator::BreakEvulator();
 				@this.EvulatorTypes["continue"] = @TextEngine::Evulator::ContinueEvulator();
 				@this.EvulatorTypes["noprint"] = @TextEngine::Evulator::NoPrintEvulator();
+				@this.EvulatorTypes["set"] = @TextEngine::Evulator::SetEvulator();
+
 			}
 			void InitAmpMaps()
 			{
