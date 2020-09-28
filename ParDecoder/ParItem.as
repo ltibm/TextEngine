@@ -286,7 +286,7 @@ namespace TextEngine
 					if(unlemused)
 					{
 						bool not_empty = currentitemvalue !is null && !currentitemvalue.IsEmptyOrDefault();
-						currentitemvalue = !not_empty;
+						@currentitemvalue = @Object_Bool(!not_empty);
 						unlemused = false;
 					}
 					if (current.IsOperator)
