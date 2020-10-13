@@ -71,8 +71,39 @@ namespace TextEngine
 				{
 					TextEngine::Text::TextElement@ tempelem = TextEngine::Text::TextElement();
 					tempelem.ElemName = "#document";
-					@tempelem.BaseEvulator = @this.Evulator;
-					this.Evulator.Parse(@tempelem, content);
+					TextEngine::Text::TextElement@ tempelem2 = TextEngine::Text::TextElement();
+					tempelem2.ElemName = "#document";		
+					@tempelem.BaseEvulator = @this.Evulator;	
+					@tempelem2.BaseEvulator = @this.Evulator;					
+					string xpath = tag.GetAttribute("xpath");
+					bool xpathold = false;
+					if(xpath.IsEmpty())
+					{
+						xpath = tag.GetAttribute("xpath_old");
+						xpathold = true;
+					}
+					this.Evulator.Parse(@tempelem2, content);
+					if(xpath.IsEmpty())
+					{
+						@tempelem = @tempelem2;
+					}
+					else
+					{
+						TextEngine::Text::TextElementsList@ elems = null;
+						if(!xpathold)
+						{
+							@elems = @tempelem2.FindByXPath(xpath);
+						}
+						else
+						{
+							@elems = @tempelem2.FindByXPathOld(xpath);
+						}
+						for(int i = 0; i < elems.Count; i++)
+						{
+							@elems[i].Parent = @tempelem;
+							tempelem.SubElements.Add(@elems[i]);
+						}
+					}
 					TextEngine::Text::TextEvulateResult@ cresult = tempelem.EvulateValue(0, 0, vars);
 					result.TextContent += cresult.TextContent + "\n";
 					if (cresult.Result == TextEngine::Text::EVULATE_RETURN)

@@ -657,7 +657,7 @@ namespace TextEngine
 				}
 				this.pos = this.TextLength;
 			}
-			private string ParseInner()
+			private string ParseInner(bool allowtrim = true)
 			{
 				StringBuilder@ text = StringBuilder();
 				bool inspec = false;
@@ -706,7 +706,7 @@ namespace TextEngine
 								{
 									parfound = false;
 									this.pos = i;
-									if (this.Evulator.TrimStartEnd)
+									if (this.Evulator.TrimStartEnd && allowtrim)
 									{
 										string str = text.ToString();
 										str = STRINGUTIL::Trim(str);
@@ -738,7 +738,7 @@ namespace TextEngine
 						if (!inspec && cur == this.Evulator.LeftTag || this.Evulator.DecodeAmpCode && cur == '&')
 						{
 							this.pos = i - 1;
-							if(this.Evulator.TrimStartEnd)
+							if(this.Evulator.TrimStartEnd && allowtrim)
 							{
 								string str = text.ToString();
 								str = STRINGUTIL::Trim(str);
@@ -762,7 +762,7 @@ namespace TextEngine
 				}
 				this.pos = this.TextLength;
 
-				if (this.Evulator.TrimStartEnd)
+				if (this.Evulator.TrimStartEnd && allowtrim)
 				{
 					string str = text.ToString();
 					str = STRINGUTIL::Trim(str);
