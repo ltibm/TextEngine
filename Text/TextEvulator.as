@@ -345,10 +345,11 @@ namespace TextEngine
 				this.ConditionalTags.insertLast("if");
 				this.ConditionalTags.insertLast("include");
 				this.ConditionalTags.insertLast("set");
+				this.ConditionalTags.insertLast("unset");
 			}
 			void InitAutoClosed()
 			{
-				this.autoclosedtags = {"elif", "else", "return", "break", "continue", "include", "cm", "set"};
+				this.autoclosedtags = {"elif", "else", "return", "break", "continue", "include", "cm", "set", "unset"};
 			}
 			void InitEvulator()
 			{
@@ -362,6 +363,7 @@ namespace TextEngine
 				@this.EvulatorTypes["continue"] = @TextEngine::Evulator::ContinueEvulator();
 				@this.EvulatorTypes["noprint"] = @TextEngine::Evulator::NoPrintEvulator();
 				@this.EvulatorTypes["set"] = @TextEngine::Evulator::SetEvulator();
+				@this.EvulatorTypes["unset"] = @TextEngine::Evulator::UnsetEvulator();
 
 			}
 			void InitAmpMaps()
