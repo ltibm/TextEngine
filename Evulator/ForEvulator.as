@@ -48,10 +48,10 @@ namespace TextEngine
 				tonum = tores;
 				TextEngine::Text::TextEvulateResult@ result = TextEngine::Text::TextEvulateResult();
 				dictionary@ svar = dictionary();
+				this.Evulator.LocalVariables.Add(@svar);
 				for (int i = startnum; i < tonum; i += stepnum)
 				{
 					svar.set(varname, i);
-					this.Evulator.LocalVariables.Add(@svar);
 					TextEngine::Text::TextEvulateResult@ cresult = tag.EvulateValue(0, 0, @vars);
 					if (cresult is null) continue;
 					result.TextContent += cresult.TextContent;
