@@ -472,29 +472,32 @@ namespace TextEngine
 								if (xoperator.Value.ToString() == ".")
 								{
 									string name = currentitemvalue.ToString();
-									if(lastvalue !is null && (lastvalue.IsDictionaryObject() || lastvalue.IsDictionary()))
+									if(!name.IsEmpty())
 									{
-										if(lastvalue.IsDictionary())
+										if(lastvalue !is null && (lastvalue.IsDictionaryObject() || lastvalue.IsDictionary()))
 										{
-											dictionary dict = lastvalue;
-											if(!lastvalue.SetValueByDictionary(dict, name))
+											if(lastvalue.IsDictionary())
 											{
-												dict.get(name, @lastvalue);
+												dictionary dict = lastvalue;
+												if(!lastvalue.SetValueByDictionary(dict, name))
+												{
+													dict.get(name, @lastvalue);
+												}
 											}
-										}
-										else if(lastvalue.IsDictionaryObject())
-										{
-											dictionary@ dict = @lastvalue;
-											if(!lastvalue.SetValueByDictionary(dict, name))
+											else if(lastvalue.IsDictionaryObject())
 											{
-												dict.get(name, @lastvalue);
+												dictionary@ dict = @lastvalue;
+												if(!lastvalue.SetValueByDictionary(dict, name))
+												{
+													dict.get(name, @lastvalue);
+												}
 											}
-										}
 
-									}
-									else
-									{
-										@lastvalue = null;
+										}
+										else
+										{
+											@lastvalue = null;
+										}
 									}
 								}
 								else
