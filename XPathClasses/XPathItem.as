@@ -44,7 +44,14 @@ namespace TextEngine
 					XPathExpression@ newexp = null;
 					@newexp = @Parse_XPathExpression(xpath, i, newi);
 					i = newi;
-					curblock.XPathExpressions.Add(@newexp);
+					if(!curblock.BlockName.IsEmpty())
+					{
+						curblock.XPathExpressions.Add(@newexp);
+					}
+					else
+					{
+						curexp.Add(@newexp);
+					}
 					continue;
 				}
                 else if (cur == '|' || cur == '(')
