@@ -132,7 +132,7 @@ namespace TextEngine
                     }
                     if(expisparexp)
                     {
-                        curexp = curblock.XPathExpressions;
+                        @curexp = @curblock.XPathExpressions;
                         expisparexp = false;
                     }
                     continue;
