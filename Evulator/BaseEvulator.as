@@ -46,10 +46,9 @@ namespace TextEngine
 			}
 			bool ConditionSuccess(TextEngine::Text::TextElement@ tag, string attr = "c")
 			{
-				string condition = tag.GetAttribute(attr);
+				string condition =((tag.NoAttrib) ? tag.Value : tag.GetAttribute(attr));
 				if (condition.IsEmpty()) return true;
 				Object@ res = this.EvulateText(condition);
-
 				if(res is null || res.IsEmptyOrDefault())
 				{
 					return false;

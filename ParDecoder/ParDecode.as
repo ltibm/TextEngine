@@ -49,15 +49,16 @@ namespace TextEngine
 				for (int i = 0; i < this.TextLength; i++)
 				{
 					char cur = this.Text[i];
-					if (cur == '=' || cur == '>' || cur == '<' || cur == '?' || cur == ':')
+					char prev = '\0';
+					if(i - 1  >= 0)
+					{
+						prev = this.Text[i - 1];
+					}
+					if ((prev != ')' && prev != ']' && prev != '}' ) && (cur == '=' || cur == '>' || cur == '<' || cur == '?' || cur == ':'))
 					{
 						if(isopened)
 						{
-							char prev = '\0';
-							if(i - 1  >= 0)
-							{
-								prev = this.Text[i - 1];
-							}
+
 							InnerItem@ item = InnerItem();
 							item.IsOperator = true;
 							if((prev == '>' && cur == '=') || (prev == '<' && cur == '=') || (prev == '!' && cur == '=') || (prev == '=' && cur == '>'))

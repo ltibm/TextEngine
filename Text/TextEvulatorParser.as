@@ -79,7 +79,6 @@ namespace TextEngine
 						i = this.pos;
 						continue;
 					}
-					@tag.BaseEvulator = @this.Evulator;
 
 					if (!tag.SlashUsed)
 					{
@@ -256,6 +255,7 @@ namespace TextEngine
 				bool inspec = false;
 				TextElement@ tagElement = TextElement();
 				@tagElement.Parent = @parent;
+				@tagElement.BaseEvulator = @this.Evulator;
 				bool istextnode = false;
 				bool intag = false;
 				for (int i = start; i < this.TextLength; i++)
@@ -472,6 +472,14 @@ namespace TextEngine
 							continue;
 						}
 					}
+					if(namefound && tagElement.NoAttrib)
+					{
+						if (cur != this.Evulator.RightTag)
+						{
+							current.Append(cur);
+							continue;
+						}
+					}
 
 					if (firstslashused && namefound)
 					{
@@ -589,7 +597,11 @@ namespace TextEngine
 								tagElement.ElemName = current.ToString();
 								current.Clear();
 							}
-							if (currentName.ToString() == "##set_TAG_ATTR##")
+							if(tagElement.NoAttrib)
+							{
+								tagElement.Value = current.ToString();
+							}
+							else if (currentName.ToString() == "##set_TAG_ATTR##")
 							{
 								tagElement.TagAttrib = current.ToString();
 							}

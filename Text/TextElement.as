@@ -30,7 +30,13 @@ namespace TextEngine
 			string ElemName
 			{
 				get const { return elemName; }
-				set { elemName = value; }
+				set { 
+					elemName = value; 
+					if(this.BaseEvulator !is null && this.BaseEvulator.NoAttributedTags.find(value.ToLowercase()) >= 0)
+					{
+						this.NoAttrib = true;
+					}
+				}
 			}
 			private TextElementAttributesList@ elemAttr;
 			TextElementAttributesList@ ElemAttr
@@ -143,6 +149,12 @@ namespace TextEngine
 			{
 				get const { return autoclosed; }
 				set { this.autoclosed = value; }
+			}
+			private bool noAttrib;
+			bool NoAttrib
+			{
+				get const { return noAttrib; }
+				set { this.noAttrib = value; }
 			}
 			private int index;
 			int Index
@@ -273,7 +285,7 @@ namespace TextEngine
 				}
 				if (this.ElementType == Parameter)
 				{
-					text.Append(string(this.BaseEvulator.LeftTag) + string(this.BaseEvulator.ParamChar) + this.ElemName + HTMLUTIL::ToAttribute(@this.ElemAttr) + string(this.BaseEvulator.RightTag));
+					text.Append(string(this.BaseEvulator.LeftTag) + string(this.BaseEvulator.ParamChar) + this.ElemName + ((this.NoAttrib && this.ElementType == ElementNode)  ?  " " + this.Value : HTMLUTIL::ToAttribute(@this.ElemAttr)) + string(this.BaseEvulator.RightTag));
 				}
 				else
 				{
@@ -327,7 +339,7 @@ namespace TextEngine
 					{
 						additional.Append('=' + this.TagAttrib);
 					}
-					text.Append(string(this.BaseEvulator.LeftTag) + this.ElemName + additional.ToString() + HTMLUTIL::ToAttribute(@this.ElemAttr));
+					text.Append(string(this.BaseEvulator.LeftTag) + this.ElemName + additional.ToString() + ((this.NoAttrib) ?  " " + this.Value : HTMLUTIL::ToAttribute(@this.ElemAttr)));
 					if (this.DirectClosed)
 					{
 						text.Append(" /" + string(this.BaseEvulator.RightTag));

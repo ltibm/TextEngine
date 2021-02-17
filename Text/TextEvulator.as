@@ -288,6 +288,18 @@ namespace TextEngine
 					conditionalTags = value;
 				}
 			}
+			private array<string> noAttributedTags;
+			array<string>  &NoAttributedTags
+			{
+				get
+				{
+					return noAttributedTags;
+				}
+				set
+				{
+					noAttributedTags = value;
+				}
+			}			
 			private bool isParseMode;
 			bool IsParseMode
 			{
@@ -329,6 +341,7 @@ namespace TextEngine
 				{
 					this.Text = text;
 				}
+				this.InitNoAttributedTags();
 				this.InitEvulator();
 				this.InitAutoClosed();
 				this.InitAmpMaps();
@@ -339,6 +352,10 @@ namespace TextEngine
 				if (!this.AllowParseCondition || !this.IsParseMode || this.ConditionalTags.find(element.ElemName) < 0) return;
 				element.Parent.EvulateValue(element.Index, element.Index + 1);
 
+			}
+			private void InitNoAttributedTags()
+			{
+				this.NoAttributedTags.insertLast("if");
 			}
 			private void InitConditionalTags()
 			{
