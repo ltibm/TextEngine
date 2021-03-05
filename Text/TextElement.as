@@ -574,9 +574,10 @@ namespace TextEngine
 				}
 				return text.ToString();
 			}
-			TextEvulateResult@ EvulateValue(int start = 0, int end = 0, dictionary@ vars = null)
+			TextEvulateResult@ EvulateValue(int start = 0, int end = 0, dictionary@ vars = null, string senderstr = "")
 			{
 				TextEvulateResult@ result = TextEvulateResult();
+				result.TextContent = senderstr;
 				if (this.ElementType == CommentNode)
 				{
 					return null;
@@ -643,7 +644,7 @@ namespace TextEngine
 						
 						if (vresult.Result == EVULATE_DEPTHSCAN)
 						{
-							@vresult = @subElement.EvulateValue(vresult.Start, vresult.End, @vars);
+							@vresult = @subElement.EvulateValue(vresult.Start, vresult.End, @vars, vresult.TextContent);
 						}
 						targetType.RenderFinish(subElement, vars, @vresult);
 						if(vresult is null) continue;
