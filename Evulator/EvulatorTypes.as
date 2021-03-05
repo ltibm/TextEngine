@@ -47,6 +47,18 @@ namespace TextEngine
 					@generalType = @value;
 				}
 			}
+			private BaseEvulator@ text;
+			BaseEvulator@ Text 
+			{ 
+				get const
+				{
+					return text;
+				}
+				set
+				{
+					@text = @value;
+				}
+			}
 			void SetType(string name, BaseEvulator@ evulator)
 			{
 				@this[name] = @evulator;

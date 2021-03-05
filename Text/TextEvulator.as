@@ -24,6 +24,30 @@ namespace TextEngine
 				get { return elements; }
 				set { @elements = @value; }
 			}
+			private bool surpressError;
+			bool SurpressError 
+			{ 
+				get const
+				{
+					return surpressError;
+				}					
+				set
+				{
+					surpressError = value;
+				}
+			}
+			private bool throwExceptionIFPrevIsNull;
+			bool ThrowExceptionIFPrevIsNull 
+			{ 
+				get const
+				{
+					return throwExceptionIFPrevIsNull;
+				}					
+				set
+				{
+					throwExceptionIFPrevIsNull = value;
+				}
+			}
 			private int depth;
 			private int Depth 
 			{ 
@@ -106,18 +130,6 @@ namespace TextEngine
 				set
 				{
 					aliasses = value;
-				}
-			}
-			private array<string> autoclosedtags;
-			array<string> &AutoClosedTags
-			{
-				get
-				{
-					return autoclosedtags;
-				}
-				set
-				{
-					autoclosedtags = value;
 				}
 			}
 			private dictionary@ globalParameters;
@@ -276,30 +288,18 @@ namespace TextEngine
 					ampMaps = value;
 				}
 			}
-			private array<string> conditionalTags;
-			array<string>  &ConditionalTags
+			private TextElementInfos@ tagInfos;
+			TextElementInfos@ TagInfos
 			{
 				get
 				{
-					return conditionalTags;
+					return tagInfos;
 				}
 				set
 				{
-					conditionalTags = value;
+					@tagInfos = @value;
 				}
-			}
-			private array<string> noAttributedTags;
-			array<string>  &NoAttributedTags
-			{
-				get
-				{
-					return noAttributedTags;
-				}
-				set
-				{
-					noAttributedTags = value;
-				}
-			}			
+			}		
 			private bool isParseMode;
 			bool IsParseMode
 			{
@@ -312,6 +312,26 @@ namespace TextEngine
 					isParseMode = value;
 				}
 			}
+			private dictionary@ customDataDictionary;
+			dictionary@ CustomDataDictionary
+			{
+				get
+				{
+					return customDataDictionary;
+				}
+			}
+			private any@ customDataSingle;
+			any@ CustomDataSingle
+			{
+				get
+				{
+					return customDataSingle;
+				}
+				set
+				{
+					@customDataSingle = @value;
+				}
+			}	
 			void ApplyXMLSettings()
 			{
 				this.SupportCDATA = true;
@@ -326,6 +346,8 @@ namespace TextEngine
 			}
 			TextEvulator(string text = "", bool isfile = false)
 			{
+				@this.customDataDictionary = @dictionary();
+				@this.TagInfos = @TextElementInfos();
 				@this.LocalVariables = @DictionaryList();
 				@this.DefineParameters = @dictionary();
 				this.LocalVariables.Add(@this.DefineParameters);
@@ -341,36 +363,36 @@ namespace TextEngine
 				{
 					this.Text = text;
 				}
-				this.InitNoAttributedTags();
+				this.InitStockTagOptions();
 				this.InitEvulator();
-				this.InitAutoClosed();
 				this.InitAmpMaps();
-				this.InitConditionalTags();
 			}
 			void OnTagClosed(TextElement@ element)
 			{
-				if (!this.AllowParseCondition || !this.IsParseMode || this.ConditionalTags.find(element.ElemName) < 0) return;
+				if (!this.AllowParseCondition || !this.IsParseMode || !((element.GetTagFlags() & TEF_ConditionalTag) != TEF_NONE)) return;
 				element.Parent.EvulateValue(element.Index, element.Index + 1);
 
 			}
-			private void InitNoAttributedTags()
+			void InitStockTagOptions()
 			{
-				this.NoAttributedTags.insertLast("if");
-			}
-			private void InitConditionalTags()
-			{
-				this.ConditionalTags.insertLast("if");
-				this.ConditionalTags.insertLast("include");
-				this.ConditionalTags.insertLast("set");
-				this.ConditionalTags.insertLast("unset");
-			}
-			void InitAutoClosed()
-			{
-				this.autoclosedtags = {"elif", "else", "return", "break", "continue", "include", "cm", "set", "unset"};
+				//* default flags;
+				this.TagInfos["*"].Flags = TEF_NONE;
+				this.TagInfos["elif"].Flags =  TEF_AutoClosedTag;
+				this.TagInfos["else"].Flags = TEF_AutoClosedTag;
+				this.TagInfos["return"].Flags = TEF_AutoClosedTag;
+				this.TagInfos["break"].Flags = TEF_AutoClosedTag;
+				this.TagInfos["continue"].Flags = TEF_AutoClosedTag;
+				this.TagInfos["include"].Flags = TEF_AutoClosedTag | TEF_ConditionalTag;
+				this.TagInfos["cm"].Flags = TEF_AutoClosedTag;
+				this.TagInfos["set"].Flags = TEF_AutoClosedTag | TEF_ConditionalTag;
+				this.TagInfos["unset"].Flags = TEF_AutoClosedTag | TEF_ConditionalTag;
+				this.TagInfos["if"].Flags = TEF_NoAttributedTag | TEF_ConditionalTag;
 			}
 			void InitEvulator()
 			{
 				@this.EvulatorTypes.Param = @TextEngine::Evulator::ParamEvulator();
+				@this.EvulatorTypes.GeneralType = @TextEngine::Evulator::GeneralEvulator();
+				@this.EvulatorTypes.Text = @TextEngine::Evulator::TexttagEvulator();
 				@this.EvulatorTypes["if"] = @TextEngine::Evulator::IfEvulator();
 				@this.EvulatorTypes["include"] = @TextEngine::Evulator::IncludeEvulator();
 				@this.EvulatorTypes["for"] = @TextEngine::Evulator::ForEvulator();

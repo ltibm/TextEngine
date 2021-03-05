@@ -11,4 +11,6 @@
 #include "NoPrintEvulator"
 #include "SetEvulator"
 #include "UnsetEvulator"
+#include "GeneralEvulator"
+#include "TexttagEvulator"
 

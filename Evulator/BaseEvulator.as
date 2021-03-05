@@ -25,30 +25,75 @@ namespace TextEngine
 			{
 				return null;
 			}
-			Object@ EvulateText(string text, dictionary@ additionalparams = null)
+			void RenderFinish(TextEngine::Text::TextElement@ tag, dictionary@ vars, TextEngine::Text::TextEvulateResult@ latestResult)
 			{
-				TextEngine::ParDecoder::ParDecode@ pardecoder = TextEngine::ParDecoder::ParDecode(text); 
-				pardecoder.Decode();
+			}
+			Object@ EvulatePar(TextEngine::ParDecoder::ParDecode@ pardecoder, dictionary@ additionalparams = null)
+			{
+				if(pardecoder.SurpressError != this.Evulator.SurpressError)
+				{
+					pardecoder.SurpressError = this.Evulator.SurpressError;
+				}
 				if(additionalparams !is null)
 				{
 					this.Evulator.LocalVariables.Add(@additionalparams);
 				}
-				TextEngine::ParDecoder::ComputeResult@ er =pardecoder.Items.Compute(@this.Evulator.GlobalParameters, null, @Object_DictionaryList(@this.Evulator.LocalVariables));
+				TextEngine::ParDecoder::ComputeResult@ er = pardecoder.Items.Compute(@this.Evulator.GlobalParameters, null, @Object_DictionaryList(@this.Evulator.LocalVariables));
 				if(additionalparams !is null)
 				{
 					this.Evulator.LocalVariables.Remove(@additionalparams);
 				}
 				return er.Result[0];
 			}
+			Object@ EvulateText(string text, dictionary@ additionalparams = null)
+			{
+				TextEngine::ParDecoder::ParDecode@ pardecoder = TextEngine::ParDecoder::ParDecode(text); 
+				pardecoder.Decode();
+				return this.EvulatePar(@pardecoder, @additionalparams);
+			}
 			void SetEvulator(TextEngine::Text::TextEvulator@ evulator)
 			{
 				@this.Evulator = @evulator;
 			}
+			Object@ EvulateAttribute(TextEngine::Text::TextElementAttribute@ attribute, dictionary@ additionalparams = null)
+			{
+				if (@attribute is null || attribute.Value.IsEmpty()) return null;
+				if(@attribute.ParData is null)
+				{
+					@attribute.ParData =  @TextEngine::ParDecoder::ParDecode(attribute.Value);
+					attribute.ParData.Decode();
+				}
+				return this.EvulatePar(@attribute.ParData, @additionalparams);
+				
+			}
 			bool ConditionSuccess(TextEngine::Text::TextElement@ tag, string attr = "c")
 			{
-				string condition =((tag.NoAttrib) ? tag.Value : tag.GetAttribute(attr));
-				if (condition.IsEmpty()) return true;
-				Object@ res = this.EvulateText(condition);
+				TextEngine::ParDecoder::ParDecode@ pardecoder = null;
+				if(tag.NoAttrib)
+				{
+					if (tag.Value.IsEmpty()) return true;
+					@pardecoder = @tag.ParData;
+					if(@pardecoder is null)
+					{
+						@pardecoder = @TextEngine::ParDecoder::ParDecode(tag.Value);
+						pardecoder.Decode();
+						@tag.ParData = @pardecoder;
+					}
+				}
+				else
+				{
+					auto@ cAttr = @tag.ElemAttr.GetByName("c");
+					if (@cAttr is null || cAttr.Value.IsEmpty()) return true;
+					@pardecoder = cAttr.ParData;
+					if(@pardecoder is null)
+					{
+						@pardecoder = @TextEngine::ParDecoder::ParDecode(cAttr.Value);
+						pardecoder.Decode();
+						@cAttr.ParData = @pardecoder;
+					}
+	 
+				}
+				Object@ res = this.EvulatePar(@pardecoder);
 				if(res is null || res.IsEmptyOrDefault())
 				{
 					return false;

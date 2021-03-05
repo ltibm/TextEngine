@@ -15,8 +15,7 @@ namespace TextEngine
 				{
 					string defname = tag.GetAttribute("name");
 					if(defname.IsEmpty() || !isalnum(defname)) return result;
-					string defvalue = tag.GetAttribute("value");
-					this.Evulator.DefineParameters.set(defname, this.EvulateText(defvalue));
+					this.Evulator.DefineParameters.set(defname, this.EvulateAttribute(@tag.ElemAttr.GetByName("value")));
 				}
 				return result;
 			}

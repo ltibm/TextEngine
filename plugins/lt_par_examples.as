@@ -15,8 +15,15 @@ void PluginInit()
 	Object@ objresult = result.Result[0];
 	if(objresult !is null)
 	{
-		PrintLine("Null değil: " + objresult.ToString());
+		PrintLine("Not null: " + objresult.ToString());
 	}
+	
+	//ParFormat
+	
+	dictionary@ d = @dictionary();
+	d["Name"] = "User";
+	d["Age"] = 100;
+	PrintLine(TextEngine::ParDecoder::ParFormat::Format("Isim: {%Name}, Yas: {%Age}", @d));
 
 }
 Object@ FN_map(Objects@ parameters)

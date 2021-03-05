@@ -10,7 +10,18 @@ namespace TextEngine
 				@this.SubElements = TextElementsList();
 				@this.ElemAttr = TextElementAttributesList();
 			}
-
+			private TextEngine::ParDecoder::ParDecode@ parData;
+			TextEngine::ParDecoder::ParDecode@ ParData 
+			{
+				get
+				{
+					return this.parData;
+				}
+				set
+				{
+					@this.parData = @value;
+				}
+			}			
 			int Depth 
 			{
 				get const
@@ -32,10 +43,11 @@ namespace TextEngine
 				get const { return elemName; }
 				set { 
 					elemName = value; 
-					if(this.BaseEvulator !is null && this.BaseEvulator.NoAttributedTags.find(value.ToLowercase()) >= 0)
-					{
-						this.NoAttrib = true;
-					}
+					this.NoAttrib = false;
+                    if (this.BaseEvulator !is null && ((this.GetTagFlags() & TEF_NoAttributedTag) != TEF_NONE))
+                    {
+                        this.NoAttrib = true;
+                    }
 				}
 			}
 			private TextElementAttributesList@ elemAttr;
@@ -86,7 +98,10 @@ namespace TextEngine
 			string Value
 			{
 				get const { return value; }
-				set { this.value = value; }
+				set { 
+					@this.ParData = null;
+					this.value = value; 
+				}
 			}
 			private TextElementsList@ subElements;
 			TextElementsList@ SubElements
@@ -232,6 +247,13 @@ namespace TextEngine
 						string alias;
 						this.BaseEvulator.Aliasses.get(name, alias);
 						if (alias == this.ElemName) return true;
+						return true;
+					}
+					else if(this.BaseEvulator.Aliasses.exists(this.ElemName))
+					{
+						string alias;
+						this.BaseEvulator.Aliasses.get(this.ElemName, alias);
+						if (alias == name) return true;
 						return true;
 					}
 				}
@@ -561,6 +583,12 @@ namespace TextEngine
 				}
 				if (this.ElemName == "#text")
 				{
+					if(@this.BaseEvulator.EvulatorTypes.Text !is null)
+					{
+						TextEngine::Evulator::BaseEvulator@ evulator = @this.BaseEvulator.EvulatorTypes.Text;
+						evulator.SetEvulator(@this.BaseEvulator);
+						return evulator.Render(@this, @vars);
+					}
 					result.TextContent = this.Value;
 					return result;
 				}
@@ -607,11 +635,18 @@ namespace TextEngine
 					{
 						targetType.SetEvulator(this.BaseEvulator);
 						@vresult = @targetType.Render(subElement, vars);
-						if (vresult is null) continue;
+						if (vresult is null)
+						{
+							targetType.RenderFinish(subElement, vars, @vresult);
+							continue;
+						}
+						
 						if (vresult.Result == EVULATE_DEPTHSCAN)
 						{
 							@vresult = @subElement.EvulateValue(vresult.Start, vresult.End, @vars);
 						}
+						targetType.RenderFinish(subElement, vars, @vresult);
+						if(vresult is null) continue;
 					}
 					else
 					{
@@ -842,6 +877,25 @@ namespace TextEngine
 					}
 				}
 				return @elements;
+			}
+			TextElementInfo@ GetTagInfo()
+			{
+				if (@this.BaseEvulator is null) return null;
+				if (this.BaseEvulator.TagInfos.HasTagInfo(this.ElemName)) return this.BaseEvulator.TagInfos[this.ElemName];
+				if (this.BaseEvulator.TagInfos.HasTagInfo("*")) return this.BaseEvulator.TagInfos["*"];
+				return null;
+			}
+			int GetTagFlags()
+			{
+				auto@ info = @this.GetTagInfo();
+				if (@info is null) return TEF_NONE;
+				return info.Flags;
+			}
+			void SetTextTag(bool closetag = false)
+			{
+				this.ElemName = "#text";
+				this.ElementType = TextNode;
+				if(closetag) this.Closed = true;
 			}
 		}
 	}

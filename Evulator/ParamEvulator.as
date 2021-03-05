@@ -13,7 +13,13 @@ namespace TextEngine
 					result.Result = TextEngine::Text::EVULATE_NOACTION;
 					return result;
 				}
-				Object@ content = this.EvulateText(tag.ElemName, @vars);
+				if(@tag.ParData is null)
+				{
+					@tag.ParData = @TextEngine::ParDecoder::ParDecode(tag.ElemName);
+					tag.ParData.Decode();
+				}
+				
+				Object@ content = this.EvulatePar(@tag.ParData, @vars);
 				if(content !is null)
 				{
 					result.TextContent += content.ToString();

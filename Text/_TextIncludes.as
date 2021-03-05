@@ -6,3 +6,6 @@
 #include "TextEvulateResult"
 #include "TextEvulator"
 #include "TextEvulatorParser"
+#include "TextElementInfo"
+#include "TextElementInfos"
+#include "TextElementFlags"

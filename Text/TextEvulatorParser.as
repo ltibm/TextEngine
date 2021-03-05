@@ -138,7 +138,7 @@ namespace TextEngine
 
 
 						}
-						if (@prevtag == null)
+						if (@prevtag == null && this.Evulator.ThrowExceptionIFPrevIsNull && !this.Evulator.SurpressError)
 						{
 							SetSyntaxError();
 							this.Evulator.IsParseMode = false;
@@ -263,9 +263,7 @@ namespace TextEngine
 					if (this.Evulator.NoParseEnabled && this.in_noparse)
 					{
 						istextnode = true;
-						tagElement.ElemName = "#text";
-						tagElement.ElementType = TextNode;
-						tagElement.Closed = true;
+						tagElement.SetTextTag(true);
 					}
 					else
 					{
@@ -276,6 +274,13 @@ namespace TextEngine
 							{
 								if (intag)
 								{
+									if(this.Evulator.SurpressError)
+									{
+										tagElement.SetTextTag(true);
+										tagElement.Value = this.Text.SubString(start, i - start);
+										this.pos = i - 1;
+										return @tagElement;
+									}
 									SetSyntaxError();
 									return null;
 								}
@@ -286,16 +291,23 @@ namespace TextEngine
 							{
 								string ampcode = this.DecodeAmp(i + 1, false);
 								i = this.pos;
+								tagElement.SetTextTag(true);
+								tagElement.ElementType = EntityReferenceNode;
 								if(ampcode.StartsWith("&"))
 								{
-									SetSyntaxError();
-									return null;
+									if(this.Evulator.SurpressError)
+									{
+										tagElement.ElementType = TextNode;
+									}
+									else
+									{
+										SetSyntaxError();
+										return null;
+									}
+	
 								}
 								tagElement.AutoClosed = true;
-								tagElement.Closed = true;
 								tagElement.Value = ampcode;
-								tagElement.ElementType = EntityReferenceNode;
-								tagElement.ElemName = "#text";
 								return @tagElement; 
 							}
 							else
@@ -303,9 +315,7 @@ namespace TextEngine
 								if (!intag)
 								{
 									istextnode = true;
-									tagElement.ElemName = "#text";
-									tagElement.ElementType = TextNode;
-									tagElement.Closed = true;
+									tagElement.SetTextTag(true);
 								}
 							}
 						}
@@ -313,7 +323,15 @@ namespace TextEngine
 						{
 							if (!intag)
 							{
-								 SetSyntaxError();
+								if(this.Evulator.SurpressError)
+								{
+									tagElement.SetTextTag(true);
+									tagElement.Value = this.Text.SubString(start, i - start);
+									this.pos = i - 1;
+									return @tagElement;
+								}
+								SetSyntaxError();
+								return null;
 							}
 							intag = false;
 						}
@@ -344,6 +362,7 @@ namespace TextEngine
 					else
 					{
 						this.ParseTagHeader(@tagElement);
+						if(tagElement.ElemName.IsEmpty()) return null;
 						if(!AllowContinue()) return null;
 						intag = false;
 						if (this.Evulator.NoParseEnabled && tagElement.ElemName == this.Evulator.NoParseTag)
@@ -369,6 +388,9 @@ namespace TextEngine
 				bool quoted = false;
 				char quotchar = '\0';
 				bool initial = false;
+				bool istagattrib = false;
+				bool tagattribonly = false;
+				int curFlags = 0;
 				for (int i = this.pos; i < this.TextLength; i++)
 				{
 					char cur = this.Text[i];
@@ -419,6 +441,7 @@ namespace TextEngine
 								tagElement.ElementType = CDATASection;
 								tagElement.ElemName = "#cdata";
 								namefound = true;
+								curFlags = 0;
 								i += 7;
 								continue;
 							}
@@ -428,6 +451,7 @@ namespace TextEngine
 					{
 						if (!namefound && tagElement.ElementType != Parameter)
 						{
+							if(this.Evulator.SurpressError) continue;
 							SetSyntaxError();
 							return;
 						}
@@ -464,17 +488,10 @@ namespace TextEngine
 						i = this.pos;
 						continue;
 					}
-					if (tagElement.ElementType == Parameter && this.Evulator.ParamNoAttrib)
+					if ((tagElement.ElementType == Parameter && this.Evulator.ParamNoAttrib)
+					|| (namefound && tagElement.NoAttrib) || (istagattrib && tagattribonly))
 					{
-						if (cur != this.Evulator.RightTag)
-						{
-							current.Append(cur);
-							continue;
-						}
-					}
-					if(namefound && tagElement.NoAttrib)
-					{
-						if (cur != this.Evulator.RightTag)
+						if ((cur != this.Evulator.RightTag || tagElement.ElementType == Parameter) || cur != this.Evulator.RightTag && (cur != '/' && next != this.Evulator.RightTag || (curFlags & TEF_DisableLastSlash) != 0))
 						{
 							current.Append(cur);
 							continue;
@@ -487,6 +504,7 @@ namespace TextEngine
 						{
 							if (cur == ' ' && next != '\t' && next != ' ')
 							{
+								if(this.Evulator.SurpressError) continue;
 								SetSyntaxError();
 								return;	
 							}
@@ -496,20 +514,20 @@ namespace TextEngine
 					{
 						if (!namefound || currentName.Length == 0)
 						{
+							if(this.Evulator.SurpressError) continue;
 							SetSyntaxError();
 							return;
 							
 						}
 						if (inquot && cur == quotchar)
 						{
-							if (currentName.ToString() == "##set_TAG_ATTR##")
+							if (istagattrib)
 							{
 								tagElement.TagAttrib = current.ToString();
-
+								istagattrib = false;
 							}
-							else if (currentName.Length > 0)
+							else if (!tagattribonly && currentName.Length > 0)
 							{
-
 								tagElement.ElemAttr.SetAttribute(currentName.ToString(), current.ToString());
 							}
 							currentName.Clear();
@@ -540,10 +558,14 @@ namespace TextEngine
 								namefound = true;
 								tagElement.ElemName = current.ToString();
 								current.Clear();
+								curFlags = tagElement.GetTagFlags();
 							}
 							if (namefound)
 							{
-								lastslashused = true;
+								if(next == this.Evulator.RightTag && (curFlags & TEF_DisableLastSlash) == 0)
+								{
+									lastslashused = true;
+								}
 							}
 							else
 							{
@@ -555,8 +577,14 @@ namespace TextEngine
 						{
 							if (namefound)
 							{
+								if(istagattrib)
+								{
+									current.Append(cur);
+									continue;
+								}
 								if (current.Length == 0)
 								{
+									if(this.Evulator.SurpressError) continue;
 									SetSyntaxError();
 									return;
 									
@@ -571,7 +599,9 @@ namespace TextEngine
 								tagElement.ElemName = current.ToString();
 								current.Clear();
 								currentName.Clear();
-								currentName.Append("##set_TAG_ATTR##");
+								istagattrib = true;
+								curFlags = tagElement.GetTagFlags();
+								tagattribonly = ((curFlags & TEF_TagAttribonly) != TEF_NONE);
 							}
 							continue;
 						}
@@ -586,6 +616,7 @@ namespace TextEngine
 
 						if (cur == this.Evulator.LeftTag)
 						{
+							if(this.Evulator.SurpressError) continue;
 							SetSyntaxError();
 							return;
 							
@@ -595,21 +626,23 @@ namespace TextEngine
 							if (!namefound)
 							{
 								tagElement.ElemName = current.ToString();
+								tagattribonly = false;
 								current.Clear();
 							}
 							if(tagElement.NoAttrib)
 							{
 								tagElement.Value = current.ToString();
 							}
-							else if (currentName.ToString() == "##set_TAG_ATTR##")
+							else if (istagattrib)
 							{
 								tagElement.TagAttrib = current.ToString();
+								istagattrib = false;
 							}
-							else if (currentName.Length > 0)
+							else if (!tagattribonly && currentName.Length > 0)
 							{
 								tagElement.SetAttribute(currentName.ToString(), current.ToString());
 							}
-							else if (current.Length > 0)
+							else if (!tagattribonly && current.Length > 0)
 							{
 								tagElement.SetAttribute(current.ToString(), "");
 							}
@@ -620,7 +653,10 @@ namespace TextEngine
 								tagElement.DirectClosed = true;
 								tagElement.Closed = true;
 							}
-							if (this.Evulator.AutoClosedTags.find(tagElement.ElemName) >= 0)
+							string elname = tagElement.ElemName;
+							elname = elname.ToLowercase();
+							
+							if ((this.Evulator.TagInfos.GetElementFlags(elname) & TEF_AutoClosedTag) != TEF_NONE)
 							{
 								@tagElement.BaseEvulator = @this.Evulator;
 								tagElement.Closed = true;
@@ -637,25 +673,27 @@ namespace TextEngine
 								namefound = true;
 								tagElement.ElemName = current.ToString();
 								current.Clear();
-
+								curFlags = tagElement.GetTagFlags();
+								tagattribonly = ((curFlags & TEF_TagAttribonly) != TEF_NONE);
 							}
 							else if (namefound)
 							{
-								if (currentName.ToString() == "##set_TAG_ATTR##")
+								if (istagattrib)
 								{
 									tagElement.TagAttrib = current.ToString();
+									istagattrib = false;
 									quoted = false;
 									currentName.Clear();
 									current.Clear();
 								}
-								else if (!currentName.IsEmpty())
+								else if (!tagattribonly && !currentName.IsEmpty())
 								{
 									tagElement.SetAttribute(currentName.ToString(), current.ToString());
 									currentName.Clear();
 									current.Clear();
 									quoted = false;
 								}
-								else if (!current.IsEmpty())
+								else if (!tagattribonly && !current.IsEmpty())
 								{
 									tagElement.SetAttribute(current.ToString(), "");
 									current.Clear();

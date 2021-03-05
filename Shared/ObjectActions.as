@@ -269,7 +269,7 @@ namespace TextEngine
 				}
 			}
 		}
-		if(results.IsEmpty()) return null;
+		if(results.IsEmpty()) return @item1;
 		return @results;
 	}
 }

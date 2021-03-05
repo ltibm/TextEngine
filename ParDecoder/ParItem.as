@@ -8,9 +8,20 @@ namespace TextEngine
 			{
 				@this.InnerItems = InnerItemsList();
 			}
-			//public static EvulatorTypes StaticTypes { get; private set; } = new EvulatorTypes();
-			//public static List<string> GlobalFunctions { get; set; } = new List<string>();
 
+			private ParDecode@ baseDecoder;
+			ParDecode@ BaseDecoder
+			{
+				get const
+				{
+					return @baseDecoder;
+				}
+				set
+				{
+					@baseDecoder = @value;
+				}
+			}
+			
 			private string parName;
 			string ParName
 			{

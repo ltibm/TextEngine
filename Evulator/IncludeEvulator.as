@@ -7,8 +7,7 @@ namespace TextEngine
 			private string GetFileName(TextEngine::Text::TextElement@ tag, dictionary@ vars)
 			{
 				bool allowjoker = tag.GetAttribute("joker") == "true";
-				string loc = tag.GetAttribute("name");
-				loc = this.EvulateText(loc, @vars).ToString();
+				string loc = this.EvulateAttribute(@tag.ElemAttr.GetByName('name'), @vars).ToString();
 				if(!allowjoker || loc.IsEmpty()) return loc;
 				uint find = loc.FindLastOf(".");
 				string extension = "";
@@ -44,9 +43,9 @@ namespace TextEngine
 				uint total = 1;
 				while(true)
 				{
-					loc = tag.GetAttribute("alternate" + total++);
-					if(loc.IsEmpty()) break;
-					Object@ evresult = @this.EvulateText(loc, @vars);
+					auto@ alter = @tag.ElemAttr.GetByName("alternate" + total++);
+					if(@alter is null || alter.Value.IsEmpty()) break;
+					Object@ evresult = @this.EvulateAttribute(@alter, @vars);
 					loc = evresult.ToString();
 					if(FILEUTIL::Exists(loc)) return loc;
 				}

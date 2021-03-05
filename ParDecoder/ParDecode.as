@@ -4,6 +4,18 @@ namespace TextEngine
 	{
 		class ParDecode
 		{
+			private bool surpressError;
+			bool SurpressError 
+			{ 
+				get const
+				{
+					return surpressError;
+				}					
+				set
+				{
+					surpressError = value;
+				}
+			}
 			private string text;
 			string Text
 			{
@@ -80,6 +92,7 @@ namespace TextEngine
 						{
 							ParItem@ item = ParItem();
 							@item.Parent = @parentItem;
+							@item.BaseDecoder = @this;
 							item.ParName = "(";
 							parentItem.InnerItems.Add(@item);
 							@parentItem = @item;
@@ -95,6 +108,7 @@ namespace TextEngine
 						}
 						ParItem@ item = ParItem();
 						@item.Parent = @parentItem;
+						@item.BaseDecoder = @this;
 						item.ParName = cur;
 						parentItem.InnerItems.Add(@item);
 						@parentItem = @item;

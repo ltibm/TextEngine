@@ -8,8 +8,12 @@ namespace TextEngine
 			{
 				if(this.Evulator.IsParseMode) return null;
 				string varname = tag.GetAttribute("var");
-				string start = tag.GetAttribute("start");
-				string step = tag.GetAttribute("step");
+				auto@ startAttr = @tag.ElemAttr.GetByName("start");
+				string start = "";
+				if(@startAttr !is null) start = startAttr.Value;
+				auto@ stepAttr = @tag.ElemAttr.GetByName("step");
+				string step = "";
+				if(@stepAttr !is null) step = stepAttr.Value;
 				if (start.IsEmpty())
 				{
 					start = "0";
@@ -18,13 +22,39 @@ namespace TextEngine
 				{
 					step = "1";
 				}
-				string to = tag.GetAttribute("to");
-				if (varname.IsEmpty() && step.IsEmpty() && to.IsEmpty())
+				auto@ toAttr = tag.ElemAttr.GetByName("to");
+				if (varname.IsEmpty() && step.IsEmpty() && (@toAttr is null || toAttr.Value.IsEmpty()))
 				{
 					return null;
 				}
-				Object@ startres = this.EvulateText(start);
-				Object@ stepres = this.EvulateText(step);
+				Object@ startres = null;
+				Object@ stepres = null;
+				if(@startAttr !is null)
+				{
+					if (@startAttr.ParData is null)
+					{
+						@startAttr.ParData = TextEngine::ParDecoder::ParDecode(start);
+						startAttr.ParData.Decode();
+					}
+					@startres = @this.EvulatePar(@startAttr.ParData);
+				}
+				else
+				{
+					@startres = @Object_Int(0);
+				}
+				if(@stepAttr !is null)
+				{
+					if (@stepAttr.ParData is null)
+					{
+						@stepAttr.ParData = TextEngine::ParDecoder::ParDecode(step);
+						stepAttr.ParData.Decode();
+					}
+					@stepres = @this.EvulatePar(@stepAttr.ParData);
+				}
+				else
+				{
+					@stepres = @Object_Int(1);
+				}
 				int startnum = 0;
 				int stepnum = 0;
 				int tonum = 0;
@@ -40,7 +70,7 @@ namespace TextEngine
 				{
 					startnum = startres;
 				}
-				Object@ tores = this.EvulateText(to);
+				Object@ tores = this.EvulateAttribute(@toAttr);
 				if (!tores.IsNumericType())
 				{
 					return null;

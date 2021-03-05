@@ -28,6 +28,18 @@ namespace TextEngine
 					mvalue = value;
 				}				
 			}
+			private TextEngine::ParDecoder::ParDecode@ parData;
+			TextEngine::ParDecoder::ParDecode@ ParData 
+			{
+				get
+				{
+					return this.parData;
+				}
+				set
+				{
+					@this.parData = @value;
+				}
+			}	
 		}
 	}
 }
