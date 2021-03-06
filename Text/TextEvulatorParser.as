@@ -734,6 +734,20 @@ namespace TextEngine
 						inspec = true;
 						continue;
 					}
+					if(this.Evulator.AllowCharMap && cur != this.Evulator.LeftTag && cur != this.Evulator.RightTag && this.Evulator.CharMap.exists(cur))
+					{
+						string map;
+						this.Evulator.CharMap.get(cur, map);
+						if(parfound)
+						{
+							nparsetext.Append(map);
+						}
+						else
+						{
+							text.Append(map);
+						}
+						continue;
+					}
 					//if (this.DecodeAmpCode && cur == '&')
 					//{
 					//    text.Append(this.DecodeAmp(i + 1));

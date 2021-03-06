@@ -320,6 +320,18 @@ namespace TextEngine
 					return customDataDictionary;
 				}
 			}
+			private dictionary charMap;
+			dictionary &CharMap
+			{
+				get
+				{
+					return charMap;
+				}
+				set
+				{
+					charMap = value;
+				}
+			}
 			private any@ customDataSingle;
 			any@ CustomDataSingle
 			{
@@ -332,6 +344,18 @@ namespace TextEngine
 					@customDataSingle = @value;
 				}
 			}	
+			private bool allowCharMap;
+			bool AllowCharMap
+			{
+				get const
+				{
+					return allowCharMap;
+				}
+				set
+				{
+					allowCharMap = value;
+				}
+			}
 			void ApplyXMLSettings()
 			{
 				this.SupportCDATA = true;
