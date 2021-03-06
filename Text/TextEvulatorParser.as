@@ -74,7 +74,7 @@ namespace TextEngine
 						this.Evulator.IsParseMode = false;
 						return;
 					}
-					if (tag is null)
+					if (tag is null || tag.ElemName.IsEmpty())
 					{
 						i = this.pos;
 						continue;

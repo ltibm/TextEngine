@@ -8,6 +8,7 @@ namespace TextEngine
 			BaseEvulator@ get_opIndex(string key) const
 			{ 
 				BaseEvulator@ evulator = null;
+				if(key.IsEmpty()) return evulator;
 				if(!types.get(key, @evulator))
 				{
 					return null;
