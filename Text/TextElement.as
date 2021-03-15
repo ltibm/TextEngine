@@ -586,7 +586,8 @@ namespace TextEngine
 				{
 					if(@this.BaseEvulator.EvulatorTypes.Text !is null)
 					{
-						TextEngine::Evulator::BaseEvulator@ evulator = @this.BaseEvulator.EvulatorTypes.Text;
+						TextEngine::Evulator::BaseEvulator@ evulator = @this.BaseEvulator.EvulatorTypes.Text();
+						if(evulator is null) return result;
 						evulator.SetEvulator(@this.BaseEvulator);
 						return evulator.Render(@this, @vars);
 					}
@@ -597,7 +598,8 @@ namespace TextEngine
 				{
 					if (this.BaseEvulator.EvulatorTypes.Param !is null)
 					{
-						TextEngine::Evulator::BaseEvulator@ evulator = @this.BaseEvulator.EvulatorTypes.Param;
+						TextEngine::Evulator::BaseEvulator@ evulator = @this.BaseEvulator.EvulatorTypes.Param();
+						if(evulator is null) return result;
 						evulator.SetEvulator(@this.BaseEvulator);
 						TextEvulateResult@ vresult = evulator.Render(@this, @vars);
 						result.Result = vresult.Result;
@@ -617,16 +619,27 @@ namespace TextEngine
 	
 					if (subElement.ElementType == Parameter)
 					{
-						@targetType = @this.BaseEvulator.EvulatorTypes.Param;
+						@targetType = @this.BaseEvulator.EvulatorTypes.Param();
 					}
 					else
 					{
 						if (subElement.ElemName != "#text")
 						{
-							@targetType = @this.BaseEvulator.EvulatorTypes[subElement.ElemName];
+							auto@ instanceFunc = @this.BaseEvulator.EvulatorTypes[subElement.ElemName];
+							if(instanceFunc !is null)
+							{
+								@targetType = @instanceFunc();
+							}
+							else
+							{
+								@targetType = null;
+							}
 							if (targetType is null)
 							{
-								@targetType = @this.BaseEvulator.EvulatorTypes.GeneralType;
+								if(@this.BaseEvulator.EvulatorTypes.GeneralType !is null)
+								{
+									@targetType = @this.BaseEvulator.EvulatorTypes.GeneralType();
+								}
 							}
 						}
 

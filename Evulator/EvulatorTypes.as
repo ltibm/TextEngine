@@ -2,12 +2,13 @@ namespace TextEngine
 {
 	namespace Evulator
 	{
+		funcdef BaseEvulator@ ET_Instance();
 		class EvulatorTypes
 		{
 			dictionary types;
-			BaseEvulator@ get_opIndex(string key) const
+			ET_Instance@ get_opIndex(string key) const
 			{ 
-				BaseEvulator@ evulator = null;
+				ET_Instance@ evulator = null;
 				if(key.IsEmpty()) return evulator;
 				if(!types.get(key, @evulator))
 				{
@@ -15,7 +16,7 @@ namespace TextEngine
 				}
 				return evulator;
 			}
-			void set_opIndex(string key, BaseEvulator@ evulator)
+			void set_opIndex(string key, ET_Instance@ evulator)
 			{ 
 				this.types.set(key, @evulator);
 			}		
@@ -24,8 +25,8 @@ namespace TextEngine
 			{
 				
 			}
-			private BaseEvulator@ param;
-			BaseEvulator@ Param 
+			private ET_Instance@ param;
+			ET_Instance@ Param 
 			{ 
 				get const
 				{
@@ -36,8 +37,8 @@ namespace TextEngine
 					@param = @value;
 				}
 			}
-			private BaseEvulator@ generalType;
-			BaseEvulator@ GeneralType 
+			private ET_Instance@ generalType;
+			ET_Instance@ GeneralType 
 			{ 
 				get const
 				{
@@ -48,8 +49,8 @@ namespace TextEngine
 					@generalType = @value;
 				}
 			}
-			private BaseEvulator@ text;
-			BaseEvulator@ Text 
+			private ET_Instance@ text;
+			ET_Instance@ Text 
 			{ 
 				get const
 				{
@@ -60,11 +61,11 @@ namespace TextEngine
 					@text = @value;
 				}
 			}
-			void SetType(string name, BaseEvulator@ evulator)
+			void SetType(string name, ET_Instance@ evulator)
 			{
 				@this[name] = @evulator;
 			}
-			BaseEvulator@ GetType(string name)
+			ET_Instance@ GetType(string name)
 			{
 				return this[name];
 			}

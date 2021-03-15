@@ -15,7 +15,8 @@ namespace TextEngine
 			/// <summary>
 			/// if set [TAG/], tag not flagged autoclosed, if not set tag flagged autoclosed. 
 			/// </summary>
-			TEF_DisableLastSlash = 1 << 4
+			TEF_DisableLastSlash = 1 << 4,
+			TEF_NoParse = 1 << 5
 		}
 	}
 }

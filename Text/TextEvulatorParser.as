@@ -44,6 +44,7 @@ namespace TextEngine
 			}
 			private int pos = 0;
 			private bool in_noparse = false;
+			private string noparse_tag = "";
 			int TextLength
 			{
 				get const
@@ -154,6 +155,7 @@ namespace TextEngine
 				}
 				this.pos = 0;
 				this.in_noparse = false;
+				this.noparse_tag = "";
 				this.Evulator.IsParseMode = false;
 			}
 			private bool AllowContinue()
@@ -352,9 +354,10 @@ namespace TextEngine
 							parent.AddElement(@tagElement);
 							TextElement@ elem = TextElement();
 							@elem.Parent = @parent;
-							elem.ElemName = this.Evulator.NoParseTag;
+							elem.ElemName = this.noparse_tag;
 							elem.SlashUsed = true;
 							this.in_noparse = false;
+							this.noparse_tag = "";
 							return @elem;
 						}
 						return @tagElement;
@@ -365,9 +368,10 @@ namespace TextEngine
 						if(tagElement.ElemName.IsEmpty()) return null;
 						if(!AllowContinue()) return null;
 						intag = false;
-						if (this.Evulator.NoParseEnabled && tagElement.ElemName == this.Evulator.NoParseTag)
+						if (this.Evulator.NoParseEnabled && (tagElement.GetTagFlags() & TEF_NoParse) > 0)
 						{
 							this.in_noparse = true;
+							this.noparse_tag = tagElement.ElemName;
 						}
 						return @tagElement;
 
@@ -766,7 +770,8 @@ namespace TextEngine
 							}
 							else if (cur == this.Evulator.RightTag)
 							{
-								if (nparsetext.ToString() == '/' + this.Evulator.NoParseTag)
+								string stra = this.noparse_tag;
+								if (nparsetext.ToString().ToLowercase() == '/' + stra.ToLowercase())
 								{
 									parfound = false;
 									this.pos = i;

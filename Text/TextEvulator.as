@@ -84,18 +84,6 @@ namespace TextEngine
 					righttag = value;
 				}
 			}
-			private string noParseTag = "noparse";
-			string NoParseTag
-			{
-				get const
-				{
-					return noParseTag;
-				}
-				set
-				{
-					noParseTag = value;
-				}
-			}
 			private bool noParseEnabled;
 			bool NoParseEnabled 
 			{
@@ -411,22 +399,24 @@ namespace TextEngine
 				this.TagInfos["set"].Flags = TEF_AutoClosedTag | TEF_ConditionalTag;
 				this.TagInfos["unset"].Flags = TEF_AutoClosedTag | TEF_ConditionalTag;
 				this.TagInfos["if"].Flags = TEF_NoAttributedTag | TEF_ConditionalTag;
+				this.TagInfos["noparse"].Flags = TEF_NoParse;
 			}
 			void InitEvulator()
 			{
-				@this.EvulatorTypes.Param = @TextEngine::Evulator::ParamEvulator();
-				@this.EvulatorTypes.GeneralType = @TextEngine::Evulator::GeneralEvulator();
-				@this.EvulatorTypes.Text = @TextEngine::Evulator::TexttagEvulator();
-				@this.EvulatorTypes["if"] = @TextEngine::Evulator::IfEvulator();
-				@this.EvulatorTypes["include"] = @TextEngine::Evulator::IncludeEvulator();
-				@this.EvulatorTypes["for"] = @TextEngine::Evulator::ForEvulator();
-				@this.EvulatorTypes["switch"] = @TextEngine::Evulator::SwitchEvulator();
-				@this.EvulatorTypes["return"] = @TextEngine::Evulator::ReturnEvulator();
-				@this.EvulatorTypes["break"] = @TextEngine::Evulator::BreakEvulator();
-				@this.EvulatorTypes["continue"] = @TextEngine::Evulator::ContinueEvulator();
-				@this.EvulatorTypes["noprint"] = @TextEngine::Evulator::NoPrintEvulator();
-				@this.EvulatorTypes["set"] = @TextEngine::Evulator::SetEvulator();
-				@this.EvulatorTypes["unset"] = @TextEngine::Evulator::UnsetEvulator();
+				
+				@this.EvulatorTypes.Param = function() { return @TextEngine::Evulator::ParamEvulator();};
+				@this.EvulatorTypes.GeneralType = function() { return @TextEngine::Evulator::GeneralEvulator();};
+				@this.EvulatorTypes.Text = function() { return @TextEngine::Evulator::TexttagEvulator();};
+				@this.EvulatorTypes["if"] = function() { return @TextEngine::Evulator::IfEvulator();};
+				@this.EvulatorTypes["include"] = function() { return @TextEngine::Evulator::IncludeEvulator();};
+				@this.EvulatorTypes["for"] = function() { return @TextEngine::Evulator::ForEvulator();};
+				@this.EvulatorTypes["switch"] = function() { return @TextEngine::Evulator::SwitchEvulator();};
+				@this.EvulatorTypes["return"] = function() { return @TextEngine::Evulator::ReturnEvulator();};
+				@this.EvulatorTypes["break"] = function() { return @TextEngine::Evulator::BreakEvulator();};
+				@this.EvulatorTypes["continue"] = function() { return @TextEngine::Evulator::ContinueEvulator();};
+				@this.EvulatorTypes["noprint"] = function() { return @TextEngine::Evulator::NoPrintEvulator();};
+				@this.EvulatorTypes["set"] = function() { return @TextEngine::Evulator::SetEvulator();};
+				@this.EvulatorTypes["unset"] = function() { return @TextEngine::Evulator::UnsetEvulator();};
 
 			}
 			void InitAmpMaps()
