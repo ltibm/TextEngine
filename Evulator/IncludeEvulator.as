@@ -4,10 +4,16 @@ namespace TextEngine
 	{
 		class IncludeEvulator : BaseEvulator
 		{
+			private string GetLastDir()
+			{
+				auto@ value = this.Evulator.LocalVariables.GetValue("_DIR_");
+				if (@value is null || value.ToString().IsEmpty()) return "";
+				return value.ToString() + "/";
+			}
 			private string GetFileName(TextEngine::Text::TextElement@ tag, dictionary@ vars)
 			{
 				bool allowjoker = tag.GetAttribute("joker") == "true";
-				string loc = this.EvulateAttribute(@tag.ElemAttr.GetByName('name'), @vars).ToString();
+				string loc = this.GetLastDir() + this.EvulateAttribute(@tag.ElemAttr.GetByName('name'), @vars).ToString();
 				if(!allowjoker || loc.IsEmpty()) return loc;
 				uint find = loc.FindLastOf(".");
 				string extension = "";
@@ -59,7 +65,7 @@ namespace TextEngine
 				string parse = tag.GetAttribute("parse", "true");
 				string content = FILEUTIL::ReadAllText(loc);
 				if(content.IsEmpty()) return null;
-
+				this.SetLocal("_DIR_", MISCUTIL::GetDirName(loc));
 				TextEngine::Text::TextEvulateResult@ result = TextEngine::Text::TextEvulateResult();
 				if (parse == "false")
 				{
@@ -116,6 +122,7 @@ namespace TextEngine
 			}
 			TextEngine::Text::TextEvulateResult@ Render(TextEngine::Text::TextElement@ tag, dictionary@ vars)
 			{
+				this.CreateLocals();
 				if(!this.Evulator.IsParseMode) return this.RenderDefault(@tag, @vars);
 				TextEngine::Text::TextEvulateResult@ result = TextEngine::Text::TextEvulateResult();
 				if(this.Evulator.IsParseMode && this.ConditionSuccess(@tag, "if"))
@@ -131,6 +138,7 @@ namespace TextEngine
 					}
 					if(!loc.IsEmpty())
 					{
+						this.SetLocal("_DIR_", MISCUTIL::GetDirName(loc));
 						string content = FILEUTIL::ReadAllText(loc);
 						if(!content.IsEmpty())
 						{
@@ -165,6 +173,11 @@ namespace TextEngine
 				tag.Parent.SubElements.Remove(@tag);
 				result.Result = TextEngine::Text::EVULATE_NOACTION;
 				return result;
+			}
+			void RenderFinish(TextEngine::Text::TextElement@ tag, dictionary@ vars, TextEngine::Text::TextEvulateResult@ latestResult)
+			{
+				BaseEvulator::RenderFinish(@tag, @vars, @latestResult);
+				this.DestroyLocals();
 			}
 		}
 	}

@@ -77,18 +77,18 @@ namespace TextEngine
 				}
 				tonum = tores;
 				TextEngine::Text::TextEvulateResult@ result = TextEngine::Text::TextEvulateResult();
-				dictionary@ svar = dictionary();
-				this.Evulator.LocalVariables.Add(@svar);
+				this.CreateLocals();
 				for (int i = startnum; i < tonum; i += stepnum)
 				{
-					svar.set(varname, i);
+					this.SetLocal(varname, Object_Int(i));
 					TextEngine::Text::TextEvulateResult@ cresult = tag.EvulateValue(0, 0, @vars);
 					if (cresult is null) continue;
 					result.TextContent += cresult.TextContent;
 					if (cresult.Result == TextEngine::Text::EVULATE_RETURN)
 					{
 						result.Result = TextEngine::Text::EVULATE_RETURN;
-						this.Evulator.LocalVariables.Remove(@svar);
+
+						this.DestroyLocals();
 						return result;
 					}
 					else if (cresult.Result == TextEngine::Text::EVULATE_BREAK)
@@ -96,7 +96,7 @@ namespace TextEngine
 						break;
 					}
 				}
-				this.Evulator.LocalVariables.Remove(@svar);
+				this.DestroyLocals();
 				result.Result = TextEngine::Text::EVULATE_TEXT;
 				return result;
 			}

@@ -13,4 +13,5 @@
 #include "UnsetEvulator"
 #include "GeneralEvulator"
 #include "TexttagEvulator"
+#include "EvulatorHandler"
 

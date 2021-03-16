@@ -65,4 +65,26 @@
 			}
 			return null;
 		}
+        Object@ GetValue(string name)
+        {
+            for (int i = this.Count - 1; i >=  0; i--)
+            {
+                auto@ current = this.inner[i];
+				if(current.exists(name))
+				{
+					Object@ result;
+					current.get(name, @result);
+					return result;
+				}
+            }
+            return null;
+        }
+		void SetValue(string name, Object@ value)
+        {
+            if(this.Count == 0)
+            {
+                this.Add(@dictionary());
+            }
+            this.inner[this.Count - 1].set(name, @value);
+        }
 	}

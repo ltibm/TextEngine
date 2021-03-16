@@ -69,6 +69,10 @@ namespace TextEngine
 			{
 				return this[name];
 			}
+			void Clear()
+			{
+				this.types.deleteAll();
+			}
 		}
 
 	}

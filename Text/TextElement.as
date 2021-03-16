@@ -578,6 +578,7 @@ namespace TextEngine
 			{
 				TextEvulateResult@ result = TextEvulateResult();
 				result.TextContent = senderstr;
+				auto@ handler = @this.BaseEvulator.GetHandler();
 				if (this.ElementType == CommentNode)
 				{
 					return null;
@@ -586,10 +587,16 @@ namespace TextEngine
 				{
 					if(@this.BaseEvulator.EvulatorTypes.Text !is null)
 					{
+						if (@handler !is null && !handler.OnRenderPre(@this, @vars)) return result;
 						TextEngine::Evulator::BaseEvulator@ evulator = @this.BaseEvulator.EvulatorTypes.Text();
 						if(evulator is null) return result;
 						evulator.SetEvulator(@this.BaseEvulator);
-						return evulator.Render(@this, @vars);
+						auto@ rResult = evulator.Render(@this, @vars);
+						if(@handler !is null) handler.OnRenderPost(@this, @vars, @rResult);
+						if (@handler !is null && !handler.OnRenderFinishPre(@this, @vars, @rResult)) return @rResult;
+						evulator.RenderFinish(this, vars, @rResult);
+						if(@handler !is null) handler.OnRenderFinishPost(@this, @vars, @rResult);
+						return rResult;
 					}
 					result.TextContent = this.Value;
 					return result;
@@ -598,10 +605,18 @@ namespace TextEngine
 				{
 					if (this.BaseEvulator.EvulatorTypes.Param !is null)
 					{
+						if (@handler !is null && !handler.OnRenderPre(@this, @vars)) return result;
 						TextEngine::Evulator::BaseEvulator@ evulator = @this.BaseEvulator.EvulatorTypes.Param();
 						if(evulator is null) return result;
 						evulator.SetEvulator(@this.BaseEvulator);
 						TextEvulateResult@ vresult = evulator.Render(@this, @vars);
+						if(@handler !is null) handler.OnRenderPost(@this, @vars, @vresult);
+
+						if (@handler !is null && handler.OnRenderFinishPre(@this, @vars, @vresult))
+						{
+							evulator.RenderFinish(this, vars, @vresult);
+							handler.OnRenderFinishPost(@this, @vars, @vresult);
+						}
 						result.Result = vresult.Result;
 						if (vresult.Result == EVULATE_TEXT)
 						{
@@ -645,13 +660,17 @@ namespace TextEngine
 
 					}
 					TextEvulateResult@ vresult = null;
+					if (@handler !is null && !handler.OnRenderPre(@subElement, @vars)) return result;
 					if (targetType !is null)
 					{
 						targetType.SetEvulator(this.BaseEvulator);
 						@vresult = @targetType.Render(subElement, vars);
+						if(@handler !is null) handler.OnRenderPost(@subElement, @vars, @vresult);
 						if (vresult is null)
 						{
+							if (@handler !is null && !handler.OnRenderFinishPre(@subElement, @vars, @vresult)) continue;
 							targetType.RenderFinish(subElement, vars, @vresult);
+							if(@handler !is null) handler.OnRenderFinishPost(@subElement, @vars, @vresult);
 							continue;
 						}
 						
@@ -659,7 +678,11 @@ namespace TextEngine
 						{
 							@vresult = @subElement.EvulateValue(vresult.Start, vresult.End, @vars, vresult.TextContent);
 						}
-						targetType.RenderFinish(subElement, vars, @vresult);
+						if (@handler !is null && handler.OnRenderFinishPre(@subElement, @vars, @vresult))
+						{
+							targetType.RenderFinish(subElement, vars, @vresult);
+							handler.OnRenderFinishPost(@subElement, @vars, @vresult);
+						}
 						if(vresult is null) continue;
 					}
 					else

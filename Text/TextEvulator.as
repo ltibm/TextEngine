@@ -4,6 +4,7 @@ namespace TextEngine
 {
 	namespace Text
 	{
+		funcdef TextEngine::Evulator::EvulatorHandler@ GetHandlerDEF();
 	    class TextEvulator
 		{
 			private string text;
@@ -344,6 +345,23 @@ namespace TextEngine
 					allowCharMap = value;
 				}
 			}
+			private GetHandlerDEF@ evulatorHandler;
+			GetHandlerDEF@ EvulatorHandler
+			{
+				get
+				{
+					return evulatorHandler;
+				}
+				set
+				{
+					@this.evulatorHandler = @value;
+				}
+			}
+			TextEngine::Evulator::EvulatorHandler@ GetHandler()
+			{
+				if(@this.EvulatorHandler is null) return null;
+				return @this.EvulatorHandler();
+			}
 			void ApplyXMLSettings()
 			{
 				this.SupportCDATA = true;
@@ -375,15 +393,25 @@ namespace TextEngine
 				{
 					this.Text = text;
 				}
-				this.InitStockTagOptions();
-				this.InitEvulator();
-				this.InitAmpMaps();
+				this.InitAll();
+				if(isfile)
+				{
+					this.SetDir(MISCUTIL::GetDirName(text));
+				}
+
 			}
 			void OnTagClosed(TextElement@ element)
 			{
 				if (!this.AllowParseCondition || !this.IsParseMode || !((element.GetTagFlags() & TEF_ConditionalTag) != TEF_NONE)) return;
 				element.Parent.EvulateValue(element.Index, element.Index + 1);
 
+			}
+			void InitAll()
+			{
+				this.ClearAllInfos();
+				this.InitStockTagOptions();
+				this.InitEvulator();
+				this.InitAmpMaps();
 			}
 			void InitStockTagOptions()
 			{
@@ -440,6 +468,25 @@ namespace TextEngine
 			void SaveToFile(string file)
 			{
 				FILEUTIL::SaveAllText(file, this.Elements.Inner(true));
+			}
+		    void SetDir(string dir)
+			{
+				this.LocalVariables.SetValue("_DIR_", dir);
+			}
+			void ClearAllInfos()
+			{
+				this.TagInfos.Clear();
+				this.EvulatorTypes.Clear();
+				this.AmpMaps.deleteAll();
+				@this.EvulatorTypes.Param = null;
+				@this.EvulatorTypes.Text = null;
+				@this.EvulatorTypes.GeneralType = null;
+			}
+			void ClearElements()
+			{
+				this.Elements.SubElements.Clear();
+				this.Elements.ElemName = "#document";
+				this.Elements.ElementType = Document;
 			}
 		}
 	}

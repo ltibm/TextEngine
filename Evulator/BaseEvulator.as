@@ -4,6 +4,7 @@ namespace TextEngine
 	{
 	    abstract class BaseEvulator
 		{
+			private dictionary@ localVars;
 			private TextEngine::Text::TextEvulator@ evulator;
 			protected TextEngine::Text::TextEvulator@ Evulator
 			{
@@ -72,6 +73,7 @@ namespace TextEngine
 				if(tag.NoAttrib)
 				{
 					if (tag.Value.IsEmpty()) return true;
+					
 					@pardecoder = @tag.ParData;
 					if(@pardecoder is null)
 					{
@@ -79,10 +81,11 @@ namespace TextEngine
 						pardecoder.Decode();
 						@tag.ParData = @pardecoder;
 					}
+			
 				}
 				else
 				{
-					auto@ cAttr = @tag.ElemAttr.GetByName("c");
+					auto@ cAttr = @tag.ElemAttr.GetByName(attr);
 					if (@cAttr is null || cAttr.Value.IsEmpty()) return true;
 					@pardecoder = cAttr.ParData;
 					if(@pardecoder is null)
@@ -96,10 +99,34 @@ namespace TextEngine
 				Object@ res = this.EvulatePar(@pardecoder);
 				if(res is null || res.IsEmptyOrDefault())
 				{
+														
 					return false;
 				}
 				return true;
 			}
+			protected void CreateLocals()
+			{
+				if (@this.localVars !is null) return;
+				@this.localVars = @dictionary();
+				this.Evulator.LocalVariables.Add(@this.localVars);
+			}
+			protected void DestroyLocals()
+			{
+				if (@this.localVars is null) return;
+				this.Evulator.LocalVariables.Remove(@this.localVars);
+				@this.localVars = null;
+			}
+			protected void SetLocal(string name, Object@ value)
+			{
+				this.localVars.set(name, value);
+			}
+			protected Object@ GetLocal(string name)
+			{
+				Object@ obj;
+				this.localVars.get(name, @obj);
+				return obj;
+			}			
+			
 		}
 	}
 }
