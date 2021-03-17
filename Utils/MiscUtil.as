@@ -1,7 +1,8 @@
 namespace MISCUTIL
 {
-	bool InStringArray(string key, array<string> values)
+	bool InStringArray(string key, array<string> values, bool ci = true)
     {
+		if(ci) key = key.ToLowercase();
 		return values.find(key) >= 0;
 	}
 	string GetDirName(string path)

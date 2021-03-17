@@ -21,7 +21,9 @@ namespace TextEngine
 					TextEngine::Text::TextElement@ elseitem = tag.GetSubElement({"elif", "else"});
 					while (elseitem !is null)
 					{
-						if (elseitem.ElemName == "else")
+						string lowercase = elseitem.ElemName;
+						lowercase = lowercase.ToLowercase();
+						if (lowercase == "else")
 						{
 							result.Start = elseitem.Index + 1;
 							result.Result = TextEngine::Text::EVULATE_DEPTHSCAN;
@@ -60,15 +62,17 @@ namespace TextEngine
 				for (int i = 0; i < tag.SubElementsCount; i++)
 				{
 					TextEngine::Text::TextElement@ sub = tag.SubElements[i];
+					string lowercase = sub.ElemName;
+					lowercase = lowercase.ToLowercase();
 					if (!conditionok || sil)
 					{
 						if(!sil)
 						{
-							if (sub.ElemName == "else")
+							if (lowercase == "else")
 							{
 								conditionok = true;
 							}
-							else if (sub.ElemName == "elif")
+							else if (lowercase == "elif")
 							{
 								conditionok = this.ConditionSuccess(@sub);
 							}
@@ -80,7 +84,7 @@ namespace TextEngine
 					}
 					else
 					{
-						if(sub.ElemName == "else" || sub.ElemName == "elif")
+						if(lowercase == "else" || lowercase == "elif")
 						{
 							sil = true;
 							i--;

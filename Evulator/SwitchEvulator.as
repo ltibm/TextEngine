@@ -11,15 +11,18 @@ namespace TextEngine
 				Object@ cvalue = this.EvulateAttribute(@tag.ElemAttr.GetByName("c"));
 				TextEngine::Text::TextElement@ defaultV;
 				TextEngine::Text::TextElement@ active;
+				
 				for (int i = 0; i < tag.SubElementsCount; i++)
 				{
 					TextEngine::Text::TextElement@ elem = tag.SubElements[i];
-					if (elem.ElemName == "default")
+					string lowercase = elem.ElemName;
+					lowercase = lowercase.ToLowercase();
+					if (lowercase == "default")
 					{
 						@defaultV = @elem;
 						continue;
 					}
-					else if (elem.ElemName != "case")
+					else if (lowercase != "case")
 					{
 						continue;
 					}
