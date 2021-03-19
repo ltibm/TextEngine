@@ -575,6 +575,10 @@ namespace TextEngine
 							{
 								firstslashused = true;
 							}
+							if((curFlags & TEF_DisableLastSlash) != 0)
+							{
+								current.Append(cur);
+							}
 							continue;
 						}
 						if (cur == '=')
