@@ -5,7 +5,6 @@ namespace TextEngine
 		"and",
 		"&&",
 		"||",
-		"|",
 		"!=",
 		"==",
 		"=",
@@ -50,7 +49,7 @@ namespace TextEngine
 			}
 
 		}
-		if (soperator == "||" || soperator == "|" || soperator == "or" || soperator == "&&" || soperator == "&" || soperator == "and")
+		if ((soperator == "||" || soperator == "|" || soperator == "&&" || soperator == "and") || ((@item1 is null || !item1.IsNumericType() || @item2 is null || !item2.IsNumericType()) && (soperator == "or" || soperator == "&" )))
 		{
 			bool leftstate = false;
 			if(item1 !is null)

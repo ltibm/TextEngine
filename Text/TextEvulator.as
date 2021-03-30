@@ -17,6 +17,7 @@ namespace TextEngine
 				set
 				{
 					text = value;
+					this.NeedParse = true;
 				}
 			}
 			private TextElement@ elements;
@@ -25,6 +26,7 @@ namespace TextEngine
 				get { return elements; }
 				set { @elements = @value; }
 			}
+			private bool NeedParse;
 			private bool surpressError;
 			bool SurpressError 
 			{ 
@@ -398,6 +400,7 @@ namespace TextEngine
 				{
 					this.SetDir(MISCUTIL::GetDirName(text));
 				}
+				this.NeedParse = true;
 
 			}
 			void OnTagClosed(TextElement@ element)
@@ -464,6 +467,7 @@ namespace TextEngine
 			{
 				TextEvulatorParser@ parser = TextEvulatorParser(@this);
 				parser.Parse(@baselement, text);
+				this.NeedParse = false;
 			}
 			void SaveToFile(string file)
 			{
@@ -487,6 +491,11 @@ namespace TextEngine
 				this.Elements.SubElements.Clear();
 				this.Elements.ElemName = "#document";
 				this.Elements.ElementType = Document;
+			}
+			TextEvulateResult@ EvulateValue(dictionary@ vars = null, bool autoparse = true)
+			{
+				if(autoparse && this.NeedParse) this.Parse();
+				return this.Elements.EvulateValue(0, 0, @vars);
 			}
 		}
 	}

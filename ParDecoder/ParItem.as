@@ -347,7 +347,7 @@ namespace TextEngine
 							continue;
 						}
 						string opstr = current.Value.ToString();
-						if (opstr == "||" || opstr == "|" || opstr == "or" || opstr == "&&" || opstr == "&" || opstr == "and" || opstr == "?")
+						if (opstr == "||" || /*opstr == "|" || */ opstr == "or" || opstr == "&&" || /*opstr == "&" || */ opstr == "and" || opstr == "?")
 						{
 							if (waitop2 != "")
 							{
@@ -388,13 +388,13 @@ namespace TextEngine
 
 
 							}
-							if (opstr == "||" || opstr == "|" || opstr == "or")
+							if (opstr == "||" || /*opstr == "|" ||*/ opstr == "or")
 							{
 								if (state)
 								{
 									@lastvalue = Object_Bool(true);
-									if (opstr != "|")
-									{
+									/*if (opstr != "|")
+									{*/
 										Object@ newobj = Object();
 										newobj.SetValueBool(true);
 										if (this.IsObject())
@@ -411,7 +411,7 @@ namespace TextEngine
 											cr.Result.Add(@newobj);
 										}
 										return cr;
-									}
+									//}
 								}
 								else
 								{
@@ -423,8 +423,8 @@ namespace TextEngine
 								if (!state)
 								{
 									lastvalue = false;
-									if (opstr != "&")
-									{
+									/*if (opstr != "&")
+									{*/
 										Object@ newobj = Object();
 										newobj.SetValueBool(false);
 										if (this.IsObject())
@@ -441,7 +441,7 @@ namespace TextEngine
 											cr.Result.Add(@newobj);
 										}
 										return cr;
-									}
+									//}
 								}
 								else
 								{
