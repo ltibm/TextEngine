@@ -16,3 +16,4 @@
 #include "ParDecoder/_ParIncludes"
 #include "XPathShared/XPathStockFunctions"
 #include "XPathShared/XPathUserFunctions"
+#include "Misc/_MiscIncludes"

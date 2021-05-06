@@ -25,7 +25,7 @@ namespace TextEngine
 			}
 			TextElementInfo@ get_opIndex(string name)
 			{ 
-				if(name == "#text") return null;
+				if(name.IsEmpty() || name == "#text") return null;
                 if(@lastElement !is null && name.ToLowercase() == lastElement.ElementName)
                 {
                     return lastElement;

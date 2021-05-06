@@ -10,16 +10,19 @@ namespace TextEngine
 				return pf.Apply(data);
 			}
 		}
+		int LatestState = 0;
 		class ParFormat
 		{
 			ParFormat()
 			{
-
+				this.Flags = PDF_AllowArrayAccess | PDF_AllowMethodCall | PDF_AllowSubMemberAccess;
 			}
 			ParFormat(string text)
 			{
 				this.Text = text;
+				this.Flags = PDF_AllowArrayAccess | PDF_AllowMethodCall | PDF_AllowSubMemberAccess;
 			}
+			int Flags;
 			private string text;
 			string Text {
 				get
@@ -68,6 +71,8 @@ namespace TextEngine
 							@item.ParData = @ParDecode(item.ItemText);
 							item.ParData.Decode();
 							item.ParData.SurpressError = this.SurpressError;
+							LatestState = this.Flags;
+							@item.ParData.OnGetFlags = function() {return LatestState;};
 						}
 						auto@ cr = @item.ParData.Items.Compute(@data);
 						if(@cr !is null && cr.Result.Count > 0 && @cr.Result[0] !is null)

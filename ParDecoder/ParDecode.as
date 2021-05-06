@@ -2,6 +2,9 @@ namespace TextEngine
 {
 	namespace ParDecoder
 	{
+		
+		funcdef int OnGetFlagsHandler();
+		funcdef bool OnSetFlagsHandler(int);
 		class ParDecode
 		{
 			private bool surpressError;
@@ -48,11 +51,29 @@ namespace TextEngine
 					@items = @value;
 				}
 			}
+			OnGetFlagsHandler@ OnGetFlags;
+			OnSetFlagsHandler@ OnSetFlags;
+			private int flags;
+		    int Flags
+			{
+				get
+				{
+					if (@this.OnGetFlags !is null) return this.OnGetFlags();
+					return this.flags;
+				}
+				set
+				{
+					if (@this.OnSetFlags !is null && this.OnSetFlags(value)) return;
+					this.flags = value;
+				}
+			}
 			ParDecode(string text)
 			{
 				this.Text = text;
 				@this.Items = ParItem();
+				@this.Items.BaseDecoder = @this;
 				this.Items.ParName = "(";
+				this.Flags = PDF_AllowMethodCall | PDF_AllowSubMemberAccess | PDF_AllowArrayAccess;
 			}
 			void Decode()
 			{
@@ -66,7 +87,7 @@ namespace TextEngine
 					{
 						prev = this.Text[i - 1];
 					}
-					if ((prev != ')' && prev != ']' && prev != '}' ) && (cur == '=' || cur == '>' || cur == '<' || cur == '?' || cur == ':'))
+					if (false && (prev != ')' && prev != ']' && prev != '}' ) && (cur == '=' || cur == '>' || cur == '<' || cur == '?' || cur == ':'))
 					{
 						if(isopened)
 						{
@@ -195,7 +216,7 @@ namespace TextEngine
 								}
 								else
 								{
-									this.pos = i - 1;
+									this.pos = i;
 								}
 								return innerItems;
 							}
@@ -223,7 +244,7 @@ namespace TextEngine
 								qutochar = '\0';
 								if (valuestr == "=" ||valuestr == "<=" || valuestr == ">=" || valuestr == "<" || valuestr == ">" || valuestr == "!=" || valuestr == "==")
 								{
-									this.pos = i - 1;
+									this.pos = i;
 									return innerItems;
 								}
 

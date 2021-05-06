@@ -48,6 +48,7 @@ namespace TextEngine
                     {
                         this.NoAttrib = true;
                     }
+					@this._tagInfo = null;
 				}
 			}
 			private TextElementAttributesList@ elemAttr;
@@ -78,6 +79,7 @@ namespace TextEngine
 				set
 				{
 				   @baseEvulator = @value;
+				   @this._tagInfo = null;
 				}
 			 }
 			private bool closed;
@@ -189,6 +191,30 @@ namespace TextEngine
 			{
 				get const { return tag_attrib; }
 				set { this.tag_attrib = value; }
+			}
+			
+			private TextElementInfo@ _tagInfo;
+			TextElementInfo@ TagInfo
+			{
+				get
+				{
+					if (@this.BaseEvulator is null) return null;
+					if (this._tagInfo is null && this.ElementType != Parameter)
+					{
+						if (this.BaseEvulator.TagInfos.HasTagInfo(this.ElemName)) @this._tagInfo = @this.BaseEvulator.TagInfos[this.ElemName];
+						else if (this.BaseEvulator.TagInfos.HasTagInfo("*")) @this._tagInfo = @this.BaseEvulator.TagInfos["*"];
+					}
+					return this._tagInfo;
+				}
+			}
+			
+			int TagFlags
+			{
+				get
+				{
+					if (@this.TagInfo is null) return TEF_NONE;
+					return this.TagInfo.Flags;
+				}
 			}
 			void AddElement(TextElement@ element)
 			{
@@ -918,16 +944,15 @@ namespace TextEngine
 			}
 			TextElementInfo@ GetTagInfo()
 			{
-				if (@this.BaseEvulator is null) return null;
-				if (this.BaseEvulator.TagInfos.HasTagInfo(this.ElemName)) return this.BaseEvulator.TagInfos[this.ElemName];
-				if (this.BaseEvulator.TagInfos.HasTagInfo("*")) return this.BaseEvulator.TagInfos["*"];
-				return null;
+				return this.TagInfo;
 			}
 			int GetTagFlags()
 			{
-				auto@ info = @this.GetTagInfo();
-				if (@info is null) return TEF_NONE;
-				return info.Flags;
+				return this.TagFlags;
+			}
+			bool HasFlag(int flag)
+			{
+				return (this.TagFlags & flag) != 0;
 			}
 			void SetTextTag(bool closetag = false)
 			{

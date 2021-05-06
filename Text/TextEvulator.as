@@ -359,6 +359,7 @@ namespace TextEngine
 					@this.evulatorHandler = @value;
 				}
 			}
+			SpecialCharType SpecialCharOption;
 			TextEngine::Evulator::EvulatorHandler@ GetHandler()
 			{
 				if(@this.EvulatorHandler is null) return null;
@@ -401,6 +402,7 @@ namespace TextEngine
 					this.SetDir(MISCUTIL::GetDirName(text));
 				}
 				this.NeedParse = true;
+				this.SpecialCharOption = SCT_AllowedAll;
 
 			}
 			void OnTagClosed(TextElement@ element)
@@ -431,6 +433,8 @@ namespace TextEngine
 				this.TagInfos["unset"].Flags = TEF_AutoClosedTag | TEF_ConditionalTag;
 				this.TagInfos["if"].Flags = TEF_NoAttributedTag | TEF_ConditionalTag;
 				this.TagInfos["noparse"].Flags = TEF_NoParse;
+				this.TagInfos["while"].Flags = TEF_NoAttributedTag;
+				this.TagInfos["do"].Flags = TEF_NoAttributedTag;
 			}
 			void InitEvulator()
 			{
@@ -448,6 +452,8 @@ namespace TextEngine
 				@this.EvulatorTypes["noprint"] = function() { return @TextEngine::Evulator::NoPrintEvulator();};
 				@this.EvulatorTypes["set"] = function() { return @TextEngine::Evulator::SetEvulator();};
 				@this.EvulatorTypes["unset"] = function() { return @TextEngine::Evulator::UnsetEvulator();};
+				@this.EvulatorTypes["while"] = function() { return @TextEngine::Evulator::WhileEvulator();};
+				@this.EvulatorTypes["do"] = function() { return @TextEngine::Evulator::DoEvulator();};
 
 			}
 			void InitAmpMaps()

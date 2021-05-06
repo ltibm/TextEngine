@@ -7,3 +7,4 @@
 #include "ParFormatType"
 #include "ParFormatItem"
 #include "ParFormat"
+#include "PardecodeFlags"

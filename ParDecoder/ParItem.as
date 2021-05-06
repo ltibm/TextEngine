@@ -63,6 +63,7 @@ namespace TextEngine
 				bool stopdoubledot = false;
 				Objects@ objects = null;
 				dictionary@ currentdict = null;
+				int minuscount = 0;
 				if(this.IsObject())
 				{
 					@currentdict = dictionary();
@@ -123,71 +124,85 @@ namespace TextEngine
 							Object@ tempvalue = Object();
 							if (paritem.ParName == "(")
 							{
-				
-								if(varnew !is null && varnew.exists(prevvalue))
+								if(this.BaseDecoder.Flags & PDF_AllowMethodCall != 0)
 								{
-									if(!tempvalue.SetValueByDictionary(varnew, prevvalue))
+									if(varnew !is null && varnew.exists(prevvalue))
 									{
-										varnew.get(prevvalue, @tempvalue);
+										if(!tempvalue.SetValueByDictionary(varnew, prevvalue))
+										{
+											varnew.get(prevvalue, @tempvalue);
+										}
 									}
-								}
-								if(tempvalue.IsFunction())
-								{
-									ObjectFunctionHandler@ func = @tempvalue;
-									@currentitemvalue = @func(@subresult.Result);
+									if(tempvalue.IsFunction())
+									{
+										ObjectFunctionHandler@ func = @tempvalue;
+										@currentitemvalue = @func(@subresult.Result);
+									}
+									else
+									{
+										@currentitemvalue = null;
+									}
 								}
 								else
 								{
-									@currentitemvalue = null;
+									//@currentitemvalue = null;
 								}
 							}
 							else if(paritem.ParName == "[")
 							{
-								if(varnew !is null && varnew.exists(prevvalue))
+								if(this.BaseDecoder.Flags & PDF_AllowArrayAccess != 0)
 								{
-									
-									if(!tempvalue.SetValueByDictionary(varnew, prevvalue))
+									if(varnew !is null && varnew.exists(prevvalue))
 									{
 										
-										varnew.get(prevvalue, @tempvalue);
+										if(!tempvalue.SetValueByDictionary(varnew, prevvalue))
+										{
+											
+											varnew.get(prevvalue, @tempvalue);
+										}
 									}
-								}
-								else
-								{
-									@currentitemvalue = null;
-								}
-								if (tempvalue.IsObjects() && subresult.Result[0].IsNumericType())
-								{
-									int indis = subresult.Result[0];
-									Objects@ list = @tempvalue;
-									if(list !is null && indis >= 0 && indis < list.Count)
+									else
 									{
-										@currentitemvalue = @list[indis];
+										@currentitemvalue = null;
+									}
+									if (tempvalue.IsObjects() && subresult.Result[0].IsNumericType())
+									{
+										int indis = subresult.Result[0];
+										Objects@ list = @tempvalue;
+										if(list !is null && indis >= 0 && indis < list.Count)
+										{
+											@currentitemvalue = @list[indis];
+										}
+										else
+										{
+											@currentitemvalue = null;
+										}
+									}
+									else if (tempvalue.IsString())
+									{
+										string s = tempvalue.ToString();
+										int indis = subresult.Result[0];
+										int slen = int(s.Length());
+										if(indis >= 0 && indis < slen)
+										{
+											@currentitemvalue = @Object(string(s[indis]));
+										}
+										else
+										{
+											@currentitemvalue = null;
+										
+										}
 									}
 									else
 									{
 										@currentitemvalue = null;
 									}
 								}
-								else if (tempvalue.IsString())
-								{
-									string s = tempvalue.ToString();
-									int indis = subresult.Result[0];
-									int slen = int(s.Length());
-									if(indis >= 0 && indis < slen)
-									{
-										@currentitemvalue = @Object(string(s[indis]));
-									}
-									else
-									{
-										@currentitemvalue = null;
-									
-									}
-								}
 								else
 								{
-									@currentitemvalue = null;
+									//@currentitemvalue = null;
 								}
+		
 							}
 						}
 						else
@@ -252,6 +267,20 @@ namespace TextEngine
 						}
 						else
 						{
+							if(@previtem !is null && previtem.IsOperator)
+							{
+								if(current.Value.ToString() == "+")
+								{
+									continue;
+								}
+								else if (current.Value.ToString() == "-")
+								{
+									minuscount++;
+									continue;
+								}
+
+
+							}
 							@currentitemvalue = @current.Value;
 						}
 			 
@@ -311,12 +340,16 @@ namespace TextEngine
 						{
 							if (waitop2 != "")
 							{
+								if(minuscount % 2 == 1) @lastvalue = @OperatorResult(@lastvalue, Object_Int(-1), "*");
+								minuscount = 0;
 								@lastvalue = @OperatorResult(@waitvalue2, @lastvalue, waitop2);
 								@waitvalue2 = null;
 								waitop2 = "";
 							}
 							if (waitop != "")
 							{
+								if(minuscount % 2 == 1) @lastvalue = @OperatorResult(@lastvalue, Object_Int(-1), "*");
+								minuscount = 0;
 								@lastvalue = @OperatorResult(@waitvalue, @lastvalue, waitop);
 								@waitvalue = null;
 								waitop = "";
@@ -351,12 +384,16 @@ namespace TextEngine
 						{
 							if (waitop2 != "")
 							{
+								if(minuscount % 2 == 1) @lastvalue = @OperatorResult(@lastvalue, Object_Int(-1), "*");
+								minuscount = 0;
 								@lastvalue = @OperatorResult(@waitvalue2, @lastvalue, waitop2);
 								@waitvalue2 = null;
 								waitop2 = "";
 							}
 							if (waitop != "")
 							{
+								if(minuscount % 2 == 1) @lastvalue = @OperatorResult(@lastvalue, Object_Int(-1), "*");
+								minuscount = 0;
 								@lastvalue = @OperatorResult(@waitvalue, @lastvalue, waitop);
 								@waitvalue = null;
 								waitop = "";
@@ -448,7 +485,8 @@ namespace TextEngine
 									@lastvalue = Object_Bool(true);
 								}
 							}
-							@xoperator = @current;
+							@xoperator = null;
+							//@xoperator = @current;
 						}
 						else
 						{
@@ -466,12 +504,16 @@ namespace TextEngine
 							{
 								if (waitop2 != "")
 								{
+									if(minuscount % 2 == 1) @lastvalue = @OperatorResult(@lastvalue, Object_Int(-1), "*");
+									minuscount = 0;
 									@lastvalue = @OperatorResult(@waitvalue2, @lastvalue, waitop2);
 									@waitvalue2 = null;
 									waitop2 = "";
 								}
 								if (waitop != "")
 								{
+									if(minuscount % 2 == 1) @lastvalue = @OperatorResult(@lastvalue, Object_Int(-1), "*");
+									minuscount = 0;
 									@lastvalue = @OperatorResult(@waitvalue, @lastvalue, waitop);
 									@waitvalue = null;
 									waitop = "";
@@ -534,34 +576,43 @@ namespace TextEngine
 							if (xoperator.Value.ToString() == ".")
 							{
 														
-								string name = currentitemvalue.ToString();
-								if(lastvalue !is null && (lastvalue.IsDictionaryObject() || lastvalue.IsDictionary()))
+								if(this.BaseDecoder.Flags & PDF_AllowSubMemberAccess != 0)
 								{
-									if(lastvalue.IsDictionary())
+									string name = currentitemvalue.ToString();
+									if(lastvalue !is null && (lastvalue.IsDictionaryObject() || lastvalue.IsDictionary()))
 									{
-										dictionary dict = lastvalue;
-										if(!lastvalue.SetValueByDictionary(dict, name))
+										if(lastvalue.IsDictionary())
 										{
-											dict.get(name, @lastvalue);
+											dictionary dict = lastvalue;
+											if(!lastvalue.SetValueByDictionary(dict, name))
+											{
+												dict.get(name, @lastvalue);
+											}
+										}
+										else if(lastvalue.IsDictionaryObject())
+										{
+											dictionary@ dict = @lastvalue;
+											if(!lastvalue.SetValueByDictionary(dict, name))
+											{
+												dict.get(name, @lastvalue);
+											}
 										}
 									}
-									else if(lastvalue.IsDictionaryObject())
+									else
 									{
-										dictionary@ dict = @lastvalue;
-										if(!lastvalue.SetValueByDictionary(dict, name))
-										{
-											dict.get(name, @lastvalue);
-										}
+										@lastvalue = null;
 									}
 								}
 								else
 								{
-									@lastvalue = null;
+									//@lastvalue = null;
 								}
+			
 							}
 							else if (nextop != "." && ((xoperator.Value.ToString() != "+" && xoperator.Value.ToString() != "-") || nextop == "" || (PriotiryStop.find(nextop) >= 0)))
 							{
-								
+								if(minuscount % 2 == 1) @currentitemvalue = @OperatorResult(@currentitemvalue, Object_Int(-1), "*");
+								minuscount = 0;
 								Object@ opresult = OperatorResult(@lastvalue, @currentitemvalue, xoperator.Value.ToString());
 								@lastvalue = @opresult;
 							}
@@ -597,12 +648,16 @@ namespace TextEngine
 				}
 				if (waitop2 != "")
 				{
+					if(minuscount % 2 == 1) @lastvalue = @OperatorResult(@lastvalue, Object_Int(-1), "*");
+					minuscount = 0;
 					@lastvalue = @OperatorResult(@waitvalue2, @lastvalue, waitop2);
 					@waitvalue2 = null;
 					waitop2 = "";
 				}
 				if (waitop != "")
 				{
+					if(minuscount % 2 == 1) @lastvalue = @OperatorResult(@lastvalue, Object_Int(-1), "*");
+					minuscount = 0;
 					@lastvalue = @OperatorResult(@waitvalue, @lastvalue, waitop);
 					@waitvalue = null;
 					waitop = "";
