@@ -82,16 +82,26 @@ namespace TextEngine
 				   @this._tagInfo = null;
 				}
 			 }
-			private bool closed;
 			bool Closed
 			{
-				get const { return closed; }
+				get const { return this.CloseState > TECT_OPEN; }
+			}
+			private int closeState;
+			int CloseState
+			{
+				get const
+				{
+					return this.closeState;
+				}
 				set
 				{
-					closed = value;
-					if(this.BaseEvulator !is null)
+					this.closeState = value;
+					if(value > TECT_OPEN)
 					{
-						this.BaseEvulator.OnTagClosed(@this);
+						if(this.BaseEvulator !is null)
+						{
+							this.BaseEvulator.OnTagClosed(@this);
+						}
 					}
 				}
 			}
@@ -142,11 +152,9 @@ namespace TextEngine
 				get const { return @parent; }
 				set { @this.parent = @value; }
 			}
-			private bool directclosed;
 			bool DirectClosed
 			{
-				get const { return directclosed; }
-				set { this.directclosed = value; }
+				get const { return this.CloseState == TECT_DIRECTCLOSED; }
 			}
 
 			private bool autoadded;
@@ -161,11 +169,9 @@ namespace TextEngine
 				get const { return aliasName; }
 				set { this.aliasName = value; }
 			}
-			private bool autoclosed;
 			bool AutoClosed
 			{
-				get const { return autoclosed; }
-				set { this.autoclosed = value; }
+				get const { return this.CloseState == TECT_AUTOCLOSED; }
 			}
 			private bool noAttrib;
 			bool NoAttrib
@@ -202,7 +208,7 @@ namespace TextEngine
 					if (this._tagInfo is null && this.ElementType != Parameter)
 					{
 						if (this.BaseEvulator.TagInfos.HasTagInfo(this.ElemName)) @this._tagInfo = @this.BaseEvulator.TagInfos[this.ElemName];
-						else if (this.BaseEvulator.TagInfos.HasTagInfo("*")) @this._tagInfo = @this.BaseEvulator.TagInfos["*"];
+						else if (@this.BaseEvulator.TagInfos.Default != null) @this._tagInfo = @this.BaseEvulator.TagInfos.Default;
 					}
 					return this._tagInfo;
 				}
@@ -958,7 +964,7 @@ namespace TextEngine
 			{
 				this.ElemName = "#text";
 				this.ElementType = TextNode;
-				if(closetag) this.Closed = true;
+				if(closetag) this.CloseState = TECT_CLOSED;
 			}
 		}
 	}

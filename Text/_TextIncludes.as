@@ -9,3 +9,4 @@
 #include "TextElementInfo"
 #include "TextElementInfos"
 #include "TextElementFlags"
+#include "TextElementClosedType"

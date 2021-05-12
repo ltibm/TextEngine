@@ -78,55 +78,11 @@ namespace TextEngine
 			void Decode()
 			{
 				InnerItem@ parentItem = this.Items;
-				bool isopened = false;
 				for (int i = 0; i < this.TextLength; i++)
 				{
 					char cur = this.Text[i];
-					char prev = '\0';
-					if(i - 1  >= 0)
-					{
-						prev = this.Text[i - 1];
-					}
-					if (false && (prev != ')' && prev != ']' && prev != '}' ) && (cur == '=' || cur == '>' || cur == '<' || cur == '?' || cur == ':'))
-					{
-						if(isopened)
-						{
-
-							InnerItem@ item = InnerItem();
-							item.IsOperator = true;
-							if((prev == '>' && cur == '=') || (prev == '<' && cur == '=') || (prev == '!' && cur == '=') || (prev == '=' && cur == '>'))
-							{
-								@item.Value = @Object(string(prev) + string(cur));
-							}
-							else
-
-							{
-								@item.Value = @Object(cur);
-							}
-							@parentItem = @parentItem.Parent;
-							isopened = false;
-							parentItem.InnerItems.Add(@item);
-							i--;
-	   
-						}
-						else
-						{
-							ParItem@ item = ParItem();
-							@item.Parent = @parentItem;
-							@item.BaseDecoder = @this;
-							item.ParName = "(";
-							parentItem.InnerItems.Add(@item);
-							@parentItem = @item;
-							isopened = true;
-						}
-						continue;
-					}
 					if (cur == '(' || cur == '[' || cur == '{')
 					{
-						if(isopened)
-						{
-							//isopened = false;   
-						}
 						ParItem@ item = ParItem();
 						@item.Parent = @parentItem;
 						@item.BaseDecoder = @this;
@@ -145,7 +101,7 @@ namespace TextEngine
 						}
 						continue;
 					}
-					InnerItemsList@ result = this.DecodeText(i, isopened);
+					InnerItemsList@ result = this.DecodeText(i);
 					parentItem.InnerItems.AddRange(@result);
 					i = this.pos;
 				}

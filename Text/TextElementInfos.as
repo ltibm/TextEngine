@@ -7,6 +7,7 @@ namespace TextEngine
 			private dictionary@ inner;
 			private TextElementInfo@ lastElement;
 			private bool autoInitialize;
+			TextElementInfo@ Default;
 			bool AutoInitialize
 			{
 				get const
@@ -21,6 +22,7 @@ namespace TextEngine
 			TextElementInfos()
 			{
 				this.AutoInitialize = true;
+				@this.Default = @TextElementInfo();
 				@this.inner = @dictionary();
 			}
 			TextElementInfo@ get_opIndex(string name)

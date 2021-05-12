@@ -2,12 +2,17 @@ namespace TextEngine
 {
 	namespace Text
 	{
+		funcdef void OnTagHandler(TextElement@ element);
+		funcdef bool OnTagPredicate(TextElement@ element);
 	    class TextElementInfo
 		{
 			TextElementInfo()
 			{
 				@customData = @dictionary();
 			}
+			OnTagHandler@ OnTagClosed;
+			OnTagHandler@ OnTagOpened;
+			OnTagPredicate@ OnAutoCreating;
 			private string elementName;
 			string ElementName
 			{

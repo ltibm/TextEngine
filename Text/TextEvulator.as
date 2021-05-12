@@ -421,7 +421,7 @@ namespace TextEngine
 			void InitStockTagOptions()
 			{
 				//* default flags;
-				this.TagInfos["*"].Flags = TEF_NONE;
+				this.TagInfos.Default.Flags = TEF_NONE;
 				this.TagInfos["elif"].Flags =  TEF_AutoClosedTag | TEF_NoAttributedTag;
 				this.TagInfos["else"].Flags = TEF_AutoClosedTag;
 				this.TagInfos["return"].Flags = TEF_AutoClosedTag;
