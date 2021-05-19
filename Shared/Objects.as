@@ -17,6 +17,10 @@
 		{ 
 			return @inner[index];
 		}
+		void set_opIndex(int index, Object@ value) 
+		{ 
+			@inner[index] = @value;
+		}
 		void Add(Object@ item)
 		{
 			this.inner.insertLast(@item);

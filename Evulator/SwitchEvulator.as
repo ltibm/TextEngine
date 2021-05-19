@@ -8,7 +8,7 @@ namespace TextEngine
 			{
 				if(this.Evulator.IsParseMode) return null;
 				TextEngine::Text::TextEvulateResult@ result = TextEngine::Text::TextEvulateResult();
-				Object@ cvalue = this.EvulateAttribute(@tag.ElemAttr.GetByName("c"));
+				Object@ cvalue = this.EvulateAttribute(@tag.ElemAttr.GetByName("c"), @vars);
 				TextEngine::Text::TextElement@ defaultV;
 				TextEngine::Text::TextElement@ active;
 				

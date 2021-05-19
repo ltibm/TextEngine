@@ -4,25 +4,38 @@ namespace TextEngine
 	{
 		namespace ParFormat
 		{
-			string Format(string s, dictionary@ data = null)
+			funcdef void PF_OnInitialiseHandler(TextEngine::ParDecoder::ParDecodeAttributes@);
+			string Format(string s, Object@ data = null)
 			{
 				auto@ pf = @ParFormat(s);
 				return pf.Apply(data);
 			}
+			string FormatEx(string s, Object@ data = null, PF_OnInitialiseHandler@ onInitialise = null)
+			{
+				auto@ pf = @ParFormat(s);
+				if(@onInitialise !is null) onInitialise(@pf.ParAttributes);
+				return pf.Apply(data);
+			}
 		}
-		int LatestState = 0;
 		class ParFormat
 		{
+			ParDecodeAttributes@ ParAttributes;
 			ParFormat()
 			{
-				this.Flags = PDF_AllowArrayAccess | PDF_AllowMethodCall | PDF_AllowSubMemberAccess;
+				this.Initialise();
 			}
 			ParFormat(string text)
 			{
 				this.Text = text;
-				this.Flags = PDF_AllowArrayAccess | PDF_AllowMethodCall | PDF_AllowSubMemberAccess;
+				this.Initialise();
 			}
-			int Flags;
+			private void Initialise()
+			{
+
+				@this.ParAttributes =  @ParDecodeAttributes();
+				this.ParAttributes.AssignReturnType = PIART_RETURN_ASSIGNVALUE_OR_NULL;
+				
+			}
 			private string text;
 			string Text {
 				get
@@ -36,19 +49,7 @@ namespace TextEngine
 				}
 			}
 			private array<ParFormatItem@>@ FormatItems;
-			private bool surpressError;
-			bool SurpressError 
-			{
-				get
-				{
-					return this.surpressError;
-				}
-				set
-				{
-					this.surpressError = value;
-				}
-			}
-			string Apply(dictionary@ data = null)
+			string Apply(Object@ data = null)
 			{
 				if (this.Text.IsEmpty()) return this.Text;
 				if(@this.FormatItems is null)
@@ -69,10 +70,13 @@ namespace TextEngine
 						if(@item.ParData is null)
 						{
 							@item.ParData = @ParDecode(item.ItemText);
+							@item.ParData.CustomData = @any(@this.ParAttributes);
+							@item.ParData.OnGetAttributes = function(item){
+								TextEngine::ParDecoder::ParDecodeAttributes@ attr = null;
+								item.CustomData.retrieve(@attr);
+								return @attr;
+							};
 							item.ParData.Decode();
-							item.ParData.SurpressError = this.SurpressError;
-							LatestState = this.Flags;
-							@item.ParData.OnGetFlags = function() {return LatestState;};
 						}
 						auto@ cr = @item.ParData.Items.Compute(@data);
 						if(@cr !is null && cr.Result.Count > 0 && @cr.Result[0] !is null)
@@ -88,6 +92,8 @@ namespace TextEngine
 				@this.FormatItems = @array<ParFormatItem@>();
 				StringBuilder@ text =  @StringBuilder();
 				bool inpar = false;
+				int openedPar = 0;
+				char quotchar = '0';
 				for (uint i = 0; i < s.Length(); i++)
 				{
 					char cur = s[i];
@@ -119,19 +125,23 @@ namespace TextEngine
 					}
 					else
 					{
-						if(cur == '{')
+						if(quotchar == '0' && (cur == '\'' || cur == '"'))
 						{
-							if (this.SurpressError)
-							{
-								continue;
-							}
-							//For exception.
-							int f = 0;
-							int h = 1 / f;
-							//throw("Syntax Error: Unexpected {");
+							quotchar = cur;
+						}
+						else if (quotchar != '0' && cur == quotchar) quotchar = '0';
+						if(cur == '{'  && quotchar == '0')
+						{
+							openedPar++;
 						}
 						if(cur == '}')
 						{
+							if(openedPar > 0)
+							{
+								openedPar--;
+								text.Append(cur);
+								continue;
+							}
 							if (text.Length > 0)
 							{
 								auto@ pfi = @ParFormatItem();

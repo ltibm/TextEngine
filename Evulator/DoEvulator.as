@@ -12,10 +12,10 @@ namespace TextEngine
 				this.CreateLocals();
 				int loop_count = 0;
 				result.Result = TextEngine::Text::EVULATE_TEXT;
-				while (this.ConditionSuccess(@tag))
+				while (this.ConditionSuccess(@tag, "*", @vars))
 				{
 					this.SetLocal("loop_count", Object_Int(loop_count++));
-					auto@ cresult = tag.EvulateValue(0, 0, vars);
+					auto@ cresult = tag.EvulateValue(0, 0, @vars);
 					if (@cresult is null) continue;
 					result.TextContent += cresult.TextContent;
 					if (cresult.Result == TextEngine::Text::EVULATE_RETURN)

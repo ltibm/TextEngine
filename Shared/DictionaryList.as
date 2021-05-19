@@ -1,4 +1,3 @@
-
 	class DictionaryList
 	{
 		private array<dictionary@> inner;
@@ -12,6 +11,10 @@
 		DictionaryList()
 		{
 			
+		}
+		DictionaryList(dictionary@ d)
+		{
+			this.Add(@d);
 		}
 		dictionary@ get_opIndex(int index) const
 		{ 
@@ -87,4 +90,9 @@
             }
             this.inner[this.Count - 1].set(name, @value);
         }
+		DictionaryList@ opAssign(dictionary@ d)
+		{
+			this.Add(@d);
+			return this;
+		}
 	}

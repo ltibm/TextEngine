@@ -104,6 +104,10 @@
 		{
 			SetValue(obj);
 		}
+		Object(dictionary@ d)
+		{
+			this.SetValueDictionaryObject(@d);
+		}
 		void SetValueBool(bool obj)
 		{
 			this.objectType = ObjectType_Bool;
@@ -518,5 +522,33 @@
 			}
 			string s = this.ToString();
 			return s == obj;
-		}	
+		}
+		void AssignToDictionaryByValueType(dictionary@ d, string name)
+		{
+			if(@d is null) return;
+			if(this.ObjectType == ObjectType_String)
+			{
+				string s = this.ToString();
+				d.set(name, s);
+			}
+			else if(this.ObjectType == ObjectType_Bool)
+			{
+				bool b = this;
+				d.set(name, b);
+			}
+			else if(this.ObjectType == ObjectType_Int)
+			{
+				int i = this;
+				d.set(name, i);
+			}
+			else if(this.ObjectType == ObjectType_Double)
+			{
+				double db = this;
+				d.set(name, db);
+			}
+			else
+			{
+				d.set(name, @this);
+			}
+		}
 	}

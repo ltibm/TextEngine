@@ -6,4 +6,6 @@
 #include "Shared/Object"
 #include "Shared/ObjectActions"
 #include "Shared/Objects"
+#include "Shared/PropObject"
+#include "Shared/AssignResult"
 #include "ParDecoder/_ParIncludes"

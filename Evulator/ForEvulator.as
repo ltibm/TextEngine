@@ -33,10 +33,9 @@ namespace TextEngine
 				{
 					if (@startAttr.ParData is null)
 					{
-						@startAttr.ParData = TextEngine::ParDecoder::ParDecode(start);
-						startAttr.ParData.Decode();
+						@startAttr.ParData = this.CreatePardecode(start);
 					}
-					@startres = @this.EvulatePar(@startAttr.ParData);
+					@startres = @this.EvulatePar(@startAttr.ParData, @vars);
 				}
 				else
 				{
@@ -46,10 +45,9 @@ namespace TextEngine
 				{
 					if (@stepAttr.ParData is null)
 					{
-						@stepAttr.ParData = TextEngine::ParDecoder::ParDecode(step);
-						stepAttr.ParData.Decode();
+						@stepAttr.ParData = this.CreatePardecode(step);
 					}
-					@stepres = @this.EvulatePar(@stepAttr.ParData);
+					@stepres = @this.EvulatePar(@stepAttr.ParData, @vars);
 				}
 				else
 				{
@@ -70,7 +68,7 @@ namespace TextEngine
 				{
 					startnum = startres;
 				}
-				Object@ tores = this.EvulateAttribute(@toAttr);
+				Object@ tores = this.EvulateAttribute(@toAttr, @vars);
 				if (!tores.IsNumericType())
 				{
 					return null;

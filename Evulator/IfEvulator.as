@@ -7,7 +7,7 @@ namespace TextEngine
 		    private TextEngine::Text::TextEvulateResult@ RenderDefault(TextEngine::Text::TextElement@ tag, dictionary@ vars)
 			{
 				TextEngine::Text::TextEvulateResult@ result = TextEngine::Text::TextEvulateResult();
-				if(this.ConditionSuccess(@tag))
+				if(this.ConditionSuccess(@tag, "*", @vars))
 				{
 					TextEngine::Text::TextElement@ elseitem = tag.GetSubElement({"elif", "else"});
 					if (elseitem !is null)
@@ -32,7 +32,7 @@ namespace TextEngine
 						else
 						{
 
-							if (this.ConditionSuccess(@elseitem))
+							if (this.ConditionSuccess(@elseitem, "*", @vars))
 							{
 								result.Start = elseitem.Index + 1;
 								TextEngine::Text::TextElement@ nextelse = elseitem.NextElementWN({"elif", "else"});
@@ -57,7 +57,7 @@ namespace TextEngine
 			{
 				if(!this.Evulator.IsParseMode) return RenderDefault(@tag, @vars);
 				TextEngine::Text::TextEvulateResult@ result = TextEngine::Text::TextEvulateResult();
-				bool conditionok = this.ConditionSuccess(@tag);
+				bool conditionok = this.ConditionSuccess(@tag, "*", @vars);
 				bool sil = false;
 				for (int i = 0; i < tag.SubElementsCount; i++)
 				{
@@ -74,7 +74,7 @@ namespace TextEngine
 							}
 							else if (lowercase == "elif")
 							{
-								conditionok = this.ConditionSuccess(@sub);
+								conditionok = this.ConditionSuccess(@sub, "*", @vars);
 							}
 						}
 

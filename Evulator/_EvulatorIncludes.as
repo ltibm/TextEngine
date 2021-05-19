@@ -16,4 +16,5 @@
 #include "EvulatorHandler"
 #include "WhileEvulator"
 #include "DoEvulator"
+#include "TextTagCommandEvulator"
 

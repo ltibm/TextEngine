@@ -3,22 +3,10 @@ namespace TextEngine
 	namespace ParDecoder
 	{
 		
-		funcdef int OnGetFlagsHandler();
-		funcdef bool OnSetFlagsHandler(int);
+		funcdef ParDecodeAttributes@ OnGetAttributesHandler(ParDecode@);
 		class ParDecode
 		{
-			private bool surpressError;
-			bool SurpressError 
-			{ 
-				get const
-				{
-					return surpressError;
-				}					
-				set
-				{
-					surpressError = value;
-				}
-			}
+			any@ CustomData;
 			private string text;
 			string Text
 			{
@@ -51,20 +39,17 @@ namespace TextEngine
 					@items = @value;
 				}
 			}
-			OnGetFlagsHandler@ OnGetFlags;
-			OnSetFlagsHandler@ OnSetFlags;
-			private int flags;
-		    int Flags
+			OnGetAttributesHandler@ OnGetAttributes;
+			ParDecodeAttributes@ _attributes = null;
+		    ParDecodeAttributes@ Attributes
 			{
 				get
 				{
-					if (@this.OnGetFlags !is null) return this.OnGetFlags();
-					return this.flags;
-				}
-				set
-				{
-					if (@this.OnSetFlags !is null && this.OnSetFlags(value)) return;
-					this.flags = value;
+					ParDecodeAttributes@ attribs = null;
+					if (@this.OnGetAttributes !is null) return this.OnGetAttributes(@this);
+					if (@attribs !is null) return attribs;
+					if (@this._attributes is null) @this._attributes =  @ParDecodeAttributes();
+					return this._attributes;
 				}
 			}
 			ParDecode(string text)
@@ -73,7 +58,6 @@ namespace TextEngine
 				@this.Items = ParItem();
 				@this.Items.BaseDecoder = @this;
 				this.Items.ParName = "(";
-				this.Flags = PDF_AllowMethodCall | PDF_AllowSubMemberAccess | PDF_AllowArrayAccess;
 			}
 			void Decode()
 			{
@@ -113,13 +97,19 @@ namespace TextEngine
 				char qutochar = '\0';
 				InnerItemsList@ innerItems = InnerItemsList();
 				StringBuilder@ value = StringBuilder();
+				bool valDotEntered = false;
 				for (int i = start; i < this.TextLength; i++)
 				{
 					char cur = this.Text[i];
 					char next = '\0';
+					char next2 = '\0';
 					if (i + 1 < this.TextLength)
 					{
 						next = this.Text[i + 1];
+					}
+					if (i + 2 < this.TextLength)
+					{
+						next2 = this.Text[i + 2];
 					}
 					if (inspec)
 					{
@@ -154,7 +144,14 @@ namespace TextEngine
 						{
 							if (value.Length > 0)
 							{
+								if(cur == '.' && !valDotEntered && isdigit(value.ToString()))
+								{
+									valDotEntered = true;
+									value.Append(cur);
+									continue;
+								}
 								innerItems.Add(this.Inner(value.ToString(), qutochar));
+								valDotEntered = false;
 								value.Clear();
 							}
 							if (cur == '[' || cur == '(' || cur == '{')
@@ -181,10 +178,21 @@ namespace TextEngine
 							{
 								InnerItem@ inner2 = InnerItem();
 								inner2.IsOperator = true;
-								if ((cur == '=' && next == '>') || (cur == '!' && next == '=') || (cur == '>' && next == '=') || (cur == '<' && next == '='))
+								if ((cur == '=' && next == '>') || (cur == '!' && next == '=') || (cur == '>' && next == '=') || (cur == '<' && next == '=') || (cur == '+' && next == '=') || (cur == '-' && next == '=') || (cur == '*' && next == '=') || (cur == '/' && next == '=') || (cur == '^' && next == '=')
+                                 || (cur == '&' && next == '=') || (cur == '|' && next == '=') || (cur == '%' && next == '=') ||(cur == '<' && next == '<') || (cur == '>' && next == '>'))
 								{
-									@inner2.Value = @Object(string(cur) + string(next));
-									i++;
+								
+									if (next2 == '=' && ((cur == '<' && next == '<') || (cur == '>' && next == '>')))
+									{
+										@inner2.Value = @Object(string(cur) + string(next) + string(next2));
+										i+=2;
+									}
+									else
+									{
+										@inner2.Value = @Object(string(cur) + string(next));
+										i++;
+									}
+
 								}
 								else if ((cur == '=' || cur == '&' || cur == '|') && cur == next)
 								{
@@ -274,6 +282,11 @@ namespace TextEngine
 				}
 				@inner.Value = @svalue;
 				return inner;
+			}
+			ComputeResult@ Compute(Object@ vars = null, Object@ localvars = null, bool autodecode = true)
+			{
+				if (autodecode && !this.Text.IsEmpty() && this.Items.InnerItems.Count == 0) this.Decode();
+				return this.Items.Compute(@vars, null, @localvars);
 			}
 		}	
 	}

@@ -59,7 +59,7 @@ namespace TextEngine
 			}
 			private TextEngine::Text::TextEvulateResult@ RenderDefault(TextEngine::Text::TextElement@ tag, dictionary@ vars)
 			{
-				if(!this.ConditionSuccess(@tag, "if")) return null;
+				if(!this.ConditionSuccess(@tag, "if", @vars)) return null;
 			    string loc = this.GetFileName(@tag, @vars);
 				if(loc.IsEmpty()) return null;
 				string parse = tag.GetAttribute("parse", "true");
@@ -125,7 +125,7 @@ namespace TextEngine
 				this.CreateLocals();
 				if(!this.Evulator.IsParseMode) return this.RenderDefault(@tag, @vars);
 				TextEngine::Text::TextEvulateResult@ result = TextEngine::Text::TextEvulateResult();
-				if(this.Evulator.IsParseMode && this.ConditionSuccess(@tag, "if"))
+				if(this.Evulator.IsParseMode && this.ConditionSuccess(@tag, "if", @vars))
 				{
 					
 					string loc =  GetLocation(@tag, @vars);

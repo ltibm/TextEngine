@@ -8,14 +8,14 @@ namespace TextEngine
 			{
 				//if(!this.Evulator.IsParseMode) return RenderDefault(@tag, @vars);
 				TextEngine::Text::TextEvulateResult@ result = TextEngine::Text::TextEvulateResult();
-				bool conditionok = this.ConditionSuccess(@tag, "if");
+				bool conditionok = this.ConditionSuccess(@tag, "if", @vars);
 				result.Result = TextEngine::Text::EVULATE_NOACTION;
 				
 				if(conditionok)
 				{
 					string defname = tag.GetAttribute("name");
 					if(defname.IsEmpty() || !isalnum(defname)) return result;
-					this.Evulator.DefineParameters.set(defname, this.EvulateAttribute(@tag.ElemAttr.GetByName("value")));
+					this.Evulator.DefineParameters.set(defname, this.EvulateAttribute(@tag.ElemAttr.GetByName("value"), @vars));
 				}
 				return result;
 			}

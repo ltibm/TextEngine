@@ -6,7 +6,7 @@ namespace TextEngine
 		{
 			TextEngine::Text::TextEvulateResult@ Render(TextEngine::Text::TextElement@ tag, dictionary@ vars)
 			{
-				bool cr = this.ConditionSuccess(@tag, "if");
+				bool cr = this.ConditionSuccess(@tag, "if", @vars);
 				if(!cr) return null;
 				TextEngine::Text::TextEvulateResult@ result = TextEngine::Text::TextEvulateResult();
 				result.Result = TextEngine::Text::EVULATE_RETURN;

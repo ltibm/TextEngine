@@ -15,8 +15,7 @@ namespace TextEngine
 				}
 				if(@tag.ParData is null)
 				{
-					@tag.ParData = @TextEngine::ParDecoder::ParDecode(tag.ElemName);
-					tag.ParData.Decode();
+					@tag.ParData = @this.CreatePardecode(tag.ElemName);
 				}
 				
 				Object@ content = this.EvulatePar(@tag.ParData, @vars);

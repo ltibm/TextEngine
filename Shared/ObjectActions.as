@@ -266,6 +266,14 @@ namespace TextEngine
 				{
 					results.SetValueInt(int(leftitem) | int(rightitem));
 				}
+				else if(soperator == "<<")
+				{
+					results.SetValueInt(int(leftitem) << int(rightitem));
+				}
+				else if(soperator == ">>")
+				{
+					results.SetValueInt(int(leftitem) >> int(rightitem));
+				}
 			}
 		}
 		if(results.IsEmpty())
@@ -274,5 +282,87 @@ namespace TextEngine
 			return @item1;
 		}
 		return @results;
+	}
+	PropObject@ GetProp(string item, dictionary@ items)
+	{
+		PropObject@ propObj = @PropObject();
+		Object@ obj = @Object();
+		if(items !is null && items.exists(item))
+		{		
+			if(!obj.SetValueByDictionary(items, item))
+			{
+				items.get(item, @obj);
+			}
+		}
+		else
+		{
+			return propObj;
+		}
+		propObj.PropType = PT_Dictionary;
+		@propObj.DictionaryData = @items;
+		@propObj.Value = @obj;
+		propObj.StrIndex = item;
+		return propObj;
+	}
+	PropObject@ GetPropEx(string item, Object@ items)
+	{
+		PropObject@ propObj = @PropObject();
+		if(@items is null) return propObj;
+		
+		if(items.IsDictionaryList())
+		{
+			DictionaryList@ dl = @items;
+			if(@dl is null) return propObj;
+			for(int i = 0; i < dl.Count; i++)
+			{
+				auto@ r = GetProp(item, @dl[i]);
+				if(r.PropType != PT_Empty) return r;
+			}
+			return @propObj;
+		}
+		else if(items.IsDictionaryObject())
+		{
+			dictionary@ d = @items;
+			return GetProp(item, @d);
+		}
+		else if(items.IsDictionary())
+		{
+			dictionary d = items;
+			return GetProp(item, d);
+		}
+		return propObj;
+	}
+	PropObject@ GetPropValue(string item, Object@ vars, Object@ localvars)
+	{
+		PropObject@ res = @PropObject();
+		if(@localvars !is null)
+		{
+			@res = @GetPropEx(item, @localvars);
+		}
+		if(@res is null || res.PropType == PT_Empty)
+		{
+			@res = @GetPropEx(item, @vars);
+		}
+		return res;
+	}
+	AssignResult@ AssignObjectValue(PropObject@ propObj, string op, Object@ value)
+	{
+		AssignResult@ ar = @AssignResult();
+		if (@propObj is null) return ar;
+		if(op.Length() > 1)
+		{
+			@value = @OperatorResult(@propObj.Value, @value , op.SubString(0, op.Length() - 1));
+		}
+		if(propObj.PropType == PT_Dictionary)
+		{
+			value.AssignToDictionaryByValueType(@propObj.DictionaryData, propObj.StrIndex);
+			ar.Success = true;
+		}
+		else if(propObj.PropType == PT_Indis)
+		{
+			@propObj.ArrayData[propObj.IntIndex] = @value;
+			ar.Success = true;
+		}
+		return ar;
 	}
 }

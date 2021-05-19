@@ -4,6 +4,8 @@
 #include "Shared/Object"
 #include "Shared/Objects"
 #include "Shared/ObjectActions"
+#include "Shared/PropObject"
+#include "Shared/AssignResult"
 
 #include "Utils/HtmlUtil"
 #include "Utils/MiscUtil"

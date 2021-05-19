@@ -46,7 +46,7 @@ namespace TextEngine
 			{
 				return this.ParName == "[";
 			}
-			ComputeResult@ Compute(dictionary@ vars = null, InnerItem@ sender = null, Object@ localvars = null)
+			ComputeResult@ Compute(Object@ vars = null, InnerItem@ sender = null, Object@ localvars = null)
 			{
 				ComputeResult@ cr = ComputeResult();
 				Object@ lastvalue = null;
@@ -64,6 +64,10 @@ namespace TextEngine
 				Objects@ objects = null;
 				dictionary@ currentdict = null;
 				int minuscount = 0;
+				string assigment = "";
+				PropObject@ lastPropObject = null;
+				PropObject@ waitAssigmentObject = null;
+				int totalOp = 0;
 				if(this.IsObject())
 				{
 					@currentdict = dictionary();
@@ -110,9 +114,11 @@ namespace TextEngine
 							prevvalue = previtem.Value.ToString();
 							
 						}
-						dictionary@ varnew = null;
-						if (lastvalue !is null && lastvalue.IsDictionaryObject())
+						Object@ varnew = null;
+						bool checkglobal = true;
+						if (lastvalue !is null && (lastvalue.IsDictionary() || lastvalue.IsDictionaryObject() || lastvalue.IsDictionaryList()))
 						{
+							checkglobal = false;
 							@varnew = @lastvalue;
 						}
 						else
@@ -121,26 +127,33 @@ namespace TextEngine
 						}
 						if (prevvalue != "")
 						{
-							Object@ tempvalue = Object();
+					
 							if (paritem.ParName == "(")
 							{
-								if(this.BaseDecoder.Flags & PDF_AllowMethodCall != 0)
+								if(this.BaseDecoder.Attributes.Flags & PDF_AllowMethodCall != 0)
 								{
-									if(varnew !is null && varnew.exists(prevvalue))
+									Object@ globalFunc = null;
+									if(checkglobal && this.BaseDecoder.Attributes.GlobalFunctions.get(prevvalue, @globalFunc) && @globalFunc !is null && globalFunc.IsFunction())
 									{
-										if(!tempvalue.SetValueByDictionary(varnew, prevvalue))
-										{
-											varnew.get(prevvalue, @tempvalue);
-										}
-									}
-									if(tempvalue.IsFunction())
-									{
-										ObjectFunctionHandler@ func = @tempvalue;
-										@currentitemvalue = @func(@subresult.Result);
+											ObjectFunctionHandler@ func = null;
+											@func = @globalFunc;
+											@currentitemvalue = @func(@subresult.Result);
 									}
 									else
 									{
-										@currentitemvalue = null;
+										Object@ tempvalue = GetProp(prevvalue, @varnew).Value;
+										if(@tempvalue !is null && tempvalue.IsFunction())
+										{
+
+											ObjectFunctionHandler@ func = null;
+											@func = @tempvalue;
+											@currentitemvalue = @func(@subresult.Result);
+										}
+										else
+										{
+											@currentitemvalue = null;
+										}
+										@lastPropObject = null;
 									}
 								}
 								else
@@ -150,16 +163,13 @@ namespace TextEngine
 							}
 							else if(paritem.ParName == "[")
 							{
-								if(this.BaseDecoder.Flags & PDF_AllowArrayAccess != 0)
+								if(this.BaseDecoder.Attributes.Flags & PDF_AllowArrayAccess != 0)
 								{
-									if(varnew !is null && varnew.exists(prevvalue))
+									Object@ tempvalue = Object();
+									@lastPropObject = GetProp(prevvalue, @varnew);
+									if(lastPropObject.PropType != PT_Empty)
 									{
-										
-										if(!tempvalue.SetValueByDictionary(varnew, prevvalue))
-										{
-											
-											varnew.get(prevvalue, @tempvalue);
-										}
+										@tempvalue = @lastPropObject.Value;
 									}
 									else
 									{
@@ -171,10 +181,14 @@ namespace TextEngine
 										Objects@ list = @tempvalue;
 										if(list !is null && indis >= 0 && indis < list.Count)
 										{
+											@lastPropObject.ArrayData = @list;
+											lastPropObject.IntIndex = indis;
+											lastPropObject.PropType = PT_Indis;
 											@currentitemvalue = @list[indis];
 										}
 										else
 										{
+											@lastPropObject = null;
 											@currentitemvalue = null;
 										}
 									}
@@ -190,12 +204,15 @@ namespace TextEngine
 										else
 										{
 											@currentitemvalue = null;
+											@lastPropObject = null;
 										
 										}
+										@lastPropObject = null;
 									}
 									else
 									{
 										@currentitemvalue = null;
+										@lastPropObject = null;
 									}
 								}
 								else
@@ -225,42 +242,6 @@ namespace TextEngine
 					}
 					else
 					{
-						dictionary@ varnew = null;
-						if (lastvalue !is null && lastvalue.IsDictionaryObject())
-						{
-							@varnew = @lastvalue;
-						}
-						else
-						{
-							if (localvars !is null && (localvars.IsDictionaryObject() || localvars.IsDictionaryList()) && current.InnerType == TYPE_VARIABLE && (next is null || !next.IsParItem()) && (xoperator is null || xoperator.Value.ToString() != ".") && !this.IsObject() )
-							{
-								string sname = current.Value.ToString();
-								dictionary@ local = null;
-								if(localvars.IsDictionaryObject())
-								{
-									@local = @localvars;
-								}
-								else if(localvars.IsDictionaryList())
-								{
-									DictionaryList@ list = localvars;
-									@local = @list.GetDictionaryIfKeyExists(sname);
-								}
-				
-								if(local !is null && local.exists(sname))
-								{
-									@varnew = @local;
-								}
-								else
-								{
-									@varnew = @vars;
-								}
-							}
-							else
-							{
-								@varnew = @vars;
-							}
-							
-						}
 						if(!current.IsOperator && current.InnerType == TYPE_VARIABLE &&  next !is null && next.IsParItem())
 						{
 							@currentitemvalue = null;
@@ -278,8 +259,6 @@ namespace TextEngine
 									minuscount++;
 									continue;
 								}
-
-
 							}
 							@currentitemvalue = @current.Value;
 						}
@@ -303,17 +282,14 @@ namespace TextEngine
 							else if (!this.IsObject())
 							{
 								string sname = current.Value.ToString();
-								if(varnew is null || !varnew.exists(sname))
+								@lastPropObject = @GetPropValue(sname, @vars, @localvars);
+								if(lastPropObject.PropType == PT_Empty)
 								{
 									@currentitemvalue = null;
 								}
 								else
 								{
-									@currentitemvalue = Object();
-									if(!currentitemvalue.SetValueByDictionary(varnew, sname))
-									{
-										varnew.get(sname, @currentitemvalue);
-									}
+									@currentitemvalue = @lastPropObject.Value;
 									if(currentitemvalue.IsEmpty())
 									{
 										@currentitemvalue = null;
@@ -331,6 +307,7 @@ namespace TextEngine
 					}
 					if (current.IsOperator)
 					{
+						totalOp++;
 						if(current.Value.ToString() == "!")
 						{
 							unlemused = !unlemused;
@@ -380,6 +357,23 @@ namespace TextEngine
 							continue;
 						}
 						string opstr = current.Value.ToString();
+						if(@waitAssigmentObject is null && (opstr == "=" || opstr == "+=" || opstr == "-=" || opstr == "*=" || opstr == "/=" || opstr == "^=" || opstr == "|=" 
+							|| opstr == "&=" || opstr == "<<=" || opstr == ">>=" || opstr == "%="))
+						{
+							if (totalOp <= 1 && (this.BaseDecoder.Attributes.Flags & PDF_AllowAssigment) != 0)
+							{
+								@waitAssigmentObject = @lastPropObject;
+								assigment = opstr;
+								@xoperator = null;
+								@previtem = null;
+							}
+							else
+							{
+								@xoperator = null;
+								@previtem = null;
+							}
+							continue;
+						}
 						if (opstr == "||" || /*opstr == "|" || */ opstr == "or" || opstr == "&&" || /*opstr == "&" || */ opstr == "and" || opstr == "?")
 						{
 							if (waitop2 != "")
@@ -532,18 +526,14 @@ namespace TextEngine
 											if(lastvalue.IsDictionary())
 											{
 												dictionary dict = lastvalue;
-												if(!lastvalue.SetValueByDictionary(dict, name))
-												{
-													dict.get(name, @lastvalue);
-												}
+												@lastPropObject = @GetProp(name, dict);
+												@lastvalue = @lastPropObject.Value;
 											}
 											else if(lastvalue.IsDictionaryObject())
 											{
 												dictionary@ dict = @lastvalue;
-												if(!lastvalue.SetValueByDictionary(dict, name))
-												{
-													dict.get(name, @lastvalue);
-												}
+												@lastPropObject = @GetProp(name, @dict);
+												@lastvalue = @lastPropObject.Value;
 											}
 
 										}
@@ -576,26 +566,23 @@ namespace TextEngine
 							if (xoperator.Value.ToString() == ".")
 							{
 														
-								if(this.BaseDecoder.Flags & PDF_AllowSubMemberAccess != 0)
+								if(this.BaseDecoder.Attributes.Flags & PDF_AllowSubMemberAccess != 0)
 								{
+									totalOp--;
 									string name = currentitemvalue.ToString();
 									if(lastvalue !is null && (lastvalue.IsDictionaryObject() || lastvalue.IsDictionary()))
 									{
 										if(lastvalue.IsDictionary())
 										{
 											dictionary dict = lastvalue;
-											if(!lastvalue.SetValueByDictionary(dict, name))
-											{
-												dict.get(name, @lastvalue);
-											}
+											@lastPropObject = @GetProp(name, dict);
+											@lastvalue = @lastPropObject.Value;
 										}
 										else if(lastvalue.IsDictionaryObject())
 										{
 											dictionary@ dict = @lastvalue;
-											if(!lastvalue.SetValueByDictionary(dict, name))
-											{
-												dict.get(name, @lastvalue);
-											}
+											@lastPropObject = @GetProp(name, @dict);
+											@lastvalue = @lastPropObject.Value;
 										}
 									}
 									else
@@ -661,6 +648,37 @@ namespace TextEngine
 					@lastvalue = @OperatorResult(@waitvalue, @lastvalue, waitop);
 					@waitvalue = null;
 					waitop = "";
+				}
+				if (@waitAssigmentObject !is null )
+				{
+					AssignResult@ assignResult = null;
+					if(waitAssigmentObject.PropType != PT_Empty)
+					{
+						try
+						{
+							@assignResult = @AssignObjectValue(@waitAssigmentObject, assigment, @lastvalue);
+						}
+						catch
+						{
+
+						}
+					}
+					switch (this.BaseDecoder.Attributes.AssignReturnType)
+					{
+						case PIART_RETURN_NULL:
+							@lastvalue = null;
+							break;
+						case PIART_RETRUN_BOOL:
+							lastvalue.SetValueBool(assignResult.Success);
+							break;
+						case PIART_RETURN_ASSIGNVALUE_OR_NULL:
+							if (assignResult is null || !assignResult.Success) @lastvalue = null;
+							else @lastvalue = @assignResult.AssignedValue;
+							break;
+						case PIART_RETURN_ASSIGN_VALUE:
+							if (assignResult !is null && assignResult.Success) @lastvalue = @assignResult.AssignedValue;
+							break;
+					}
 				}
 				if (this.IsObject())
 				{

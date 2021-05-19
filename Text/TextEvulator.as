@@ -49,6 +49,7 @@ namespace TextEngine
 				set
 				{
 					throwExceptionIFPrevIsNull = value;
+					this.ParAttributes.SurpressError = value;
 				}
 			}
 			private int depth;
@@ -359,6 +360,8 @@ namespace TextEngine
 					@this.evulatorHandler = @value;
 				}
 			}
+			TextEngine::ParDecoder::ParDecodeAttributes@ ParAttributes;
+			int IntertwinedBracketsState;
 			SpecialCharType SpecialCharOption;
 			TextEngine::Evulator::EvulatorHandler@ GetHandler()
 			{
@@ -377,8 +380,16 @@ namespace TextEngine
 				this.DecodeAmpCode = true;
 				this.TrimMultipleSpaces = true;
 			}
+			void ApplyCommandLineByLine()
+			{
+				@this.EvulatorTypes.Text = function() { return @TextEngine::Evulator::TextTagCommandEvulator();};
+				@this.EvulatorTypes.Param = null;
+				this.ParAttributes.Flags |= TextEngine::ParDecoder::PDF_AllowAssigment;
+			}
 			TextEvulator(string text = "", bool isfile = false)
 			{
+				@this.ParAttributes = @TextEngine::ParDecoder::ParDecodeAttributes();
+				this.IntertwinedBracketsState = IBST_ALLOW_NOATTRIBUTED_AND_PARAM;
 				@this.customDataDictionary = @dictionary();
 				@this.TagInfos = @TextElementInfos();
 				@this.LocalVariables = @DictionaryList();

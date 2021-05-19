@@ -7,7 +7,7 @@ namespace TextEngine
 			TextEngine::Text::TextEvulateResult@ Render(TextEngine::Text::TextElement@ tag, dictionary@ vars)
 			{
 				TextEngine::Text::TextEvulateResult@ result = TextEngine::Text::TextEvulateResult();
-				bool conditionok = this.ConditionSuccess(@tag, "if");
+				bool conditionok = this.ConditionSuccess(@tag, "if", @vars);
 				result.Result = TextEngine::Text::EVULATE_NOACTION;
 				if(conditionok)
 				{

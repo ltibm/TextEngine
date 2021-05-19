@@ -8,3 +8,5 @@
 #include "ParFormatItem"
 #include "ParFormat"
 #include "PardecodeFlags"
+#include "ParItemAssignReturnType"
+#include "ParDecodeAttributes"

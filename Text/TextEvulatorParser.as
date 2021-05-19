@@ -443,6 +443,7 @@ namespace TextEngine
 				char quotchar = '\0';
 				bool initial = false;
 				bool istagattrib = false;
+				int totalPar = 0;
 				for (int i = this.pos; i < this.TextLength; i++)
 				{
 					char cur = this.Text[i];
@@ -540,8 +541,23 @@ namespace TextEngine
 					if ((tagElement.ElementType == Parameter && this.Evulator.ParamNoAttrib)
 					|| (namefound && tagElement.NoAttrib) || (istagattrib && tagElement.HasFlag(TEF_TagAttribonly)))
 					{
-						if ((cur != this.Evulator.RightTag || tagElement.ElementType == Parameter) || cur != this.Evulator.RightTag && (cur != '/' && next != this.Evulator.RightTag || (tagElement.HasFlag(TEF_DisableLastSlash))))
+						if (inquot && quotchar == cur)
 						{
+							current.Append(cur);
+							inquot = false;
+						}
+						else if (!inquot && (cur == '\'' || cur == '"'))
+						{
+							inquot = true;
+							quotchar = cur;
+						}
+						if(!inquot && cur == this.Evulator.LeftTag && tagElement.AllowIntertwinedPar)
+						{
+							totalPar++;
+						}
+						if (inquot || totalPar > 0 || ((cur != this.Evulator.RightTag || tagElement.ElementType == Parameter) || cur != this.Evulator.RightTag && (cur != '/' && next != this.Evulator.RightTag || (tagElement.HasFlag(TEF_DisableLastSlash)))))
+						{
+							 if (!inquot && cur == this.Evulator.RightTag && totalPar > 0) totalPar--;
 							current.Append(cur);
 							continue;
 						}
@@ -663,16 +679,14 @@ namespace TextEngine
 								i++;
 							}
 						}
-
-						if (cur == this.Evulator.LeftTag)
-						{
-							if(this.Evulator.SurpressError) continue;
-							SetSyntaxError();
-							return;
-							
-						}
 						if (cur == this.Evulator.RightTag)
 						{
+							if(totalPar > 0)
+							{
+								totalPar--;
+								current.Append(cur);
+								continue;
+							}
 							if (!namefound)
 							{
 								tagElement.ElemName = current.ToString();
@@ -746,6 +760,17 @@ namespace TextEngine
 								}
 							}
 							continue;
+						}
+						if (cur == this.Evulator.LeftTag)
+						{
+							if (!tagElement.AllowIntertwinedPar)
+							{
+								if (this.Evulator.SurpressError) continue;
+								this.Evulator.IsParseMode = false;
+								SetSyntaxError();
+							}
+							totalPar++;
+
 						}
 					}
 					current.Append(cur);

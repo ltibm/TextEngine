@@ -222,6 +222,17 @@ namespace TextEngine
 					return this.TagInfo.Flags;
 				}
 			}
+			bool AllowIntertwinedPar
+			{
+				get const
+				{
+					int state = this.BaseEvulator.IntertwinedBracketsState;
+					bool allowed = state == IBST_ALLOW_ALWAYS;
+					allowed = allowed || (this.NoAttrib && (state == IBST_ALLOW_NOATTRIBUTED_AND_PARAM || state == IBST_ALLOW_NOATTRIBUTED_ONLY));
+					allowed = allowed || (this.ElementType == Parameter && (state == IBST_ALLOW_PARAM_ONLY || state == IBST_ALLOW_NOATTRIBUTED_AND_PARAM));
+					return allowed;
+				}
+			}
 			void AddElement(TextElement@ element)
 			{
 				element.Index = this.SubElements.Count;
@@ -965,6 +976,17 @@ namespace TextEngine
 				this.ElemName = "#text";
 				this.ElementType = TextNode;
 				if(closetag) this.CloseState = TECT_CLOSED;
+			}
+			TextElement@ GetParentByName(string name)
+			{
+				auto@ parent = @this.Parent;
+				while (@parent !is null)
+				{
+					if (parent.NameEquals(name)) return parent;
+					@parent = @parent.Parent;
+				}
+				return null;
+
 			}
 		}
 	}

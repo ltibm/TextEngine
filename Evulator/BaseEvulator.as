@@ -2,6 +2,7 @@ namespace TextEngine
 {
 	namespace Evulator
 	{
+		BaseEvulator@ LastEvulator = null;
 	    abstract class BaseEvulator
 		{
 			private dictionary@ localVars;
@@ -22,6 +23,18 @@ namespace TextEngine
 			{
 			  
 			}
+			protected TextEngine::ParDecoder::ParDecode@ CreatePardecode(string text, bool decode = true)
+			{
+				auto@ pd = @TextEngine::ParDecoder::ParDecode(text);
+				@pd.CustomData = @any(@this.Evulator.ParAttributes);
+				@pd.OnGetAttributes = function(item){
+					TextEngine::ParDecoder::ParDecodeAttributes@ attr = null;
+					item.CustomData.retrieve(@attr);
+					return @attr;
+				};
+				if (decode) pd.Decode();
+				return pd;
+			}
 			TextEngine::Text::TextEvulateResult@ Render(TextEngine::Text::TextElement@ tag, dictionary@ vars)
 			{
 				return null;
@@ -31,25 +44,23 @@ namespace TextEngine
 			}
 			Object@ EvulatePar(TextEngine::ParDecoder::ParDecode@ pardecoder, dictionary@ additionalparams = null)
 			{
-				if(pardecoder.SurpressError != this.Evulator.SurpressError)
+				TextEngine::ParDecoder::ComputeResult@ er = null;
+				if(additionalparams is null)
 				{
-					pardecoder.SurpressError = this.Evulator.SurpressError;
+					@er = pardecoder.Items.Compute(Object_DictionaryObject(@this.Evulator.GlobalParameters), null, @Object_DictionaryList(@this.Evulator.LocalVariables));
 				}
-				if(additionalparams !is null)
+				else
 				{
-					this.Evulator.LocalVariables.Add(@additionalparams);
-				}
-				TextEngine::ParDecoder::ComputeResult@ er = pardecoder.Items.Compute(@this.Evulator.GlobalParameters, null, @Object_DictionaryList(@this.Evulator.LocalVariables));
-				if(additionalparams !is null)
-				{
-					this.Evulator.LocalVariables.Remove(@additionalparams);
+					DictionaryList@ di = @DictionaryList();
+					di.Add(@this.Evulator.GlobalParameters);
+					di.Add(@additionalparams);
+					@er = pardecoder.Items.Compute(Object_DictionaryList(@this.Evulator.GlobalParameters), null, @Object_DictionaryList(@this.Evulator.LocalVariables));
 				}
 				return er.Result[0];
 			}
 			Object@ EvulateText(string text, dictionary@ additionalparams = null)
 			{
-				TextEngine::ParDecoder::ParDecode@ pardecoder = TextEngine::ParDecoder::ParDecode(text); 
-				pardecoder.Decode();
+				TextEngine::ParDecoder::ParDecode@ pardecoder = @this.CreatePardecode(text);
 				return this.EvulatePar(@pardecoder, @additionalparams);
 			}
 			void SetEvulator(TextEngine::Text::TextEvulator@ evulator)
@@ -61,37 +72,35 @@ namespace TextEngine
 				if (@attribute is null || attribute.Value.IsEmpty()) return null;
 				if(@attribute.ParData is null)
 				{
-					@attribute.ParData =  @TextEngine::ParDecoder::ParDecode(attribute.Value);
-					attribute.ParData.Decode();
+					@attribute.ParData =  @this.CreatePardecode(attribute.Value);
 				}
 				return this.EvulatePar(@attribute.ParData, @additionalparams);
 				
 			}
-			bool ConditionSuccess(TextEngine::Text::TextElement@ tag, string attr = "c")
+			bool ConditionSuccess(TextEngine::Text::TextElement@ tag, string attr = "*", dictionary@ vars = null)
 			{
 				TextEngine::ParDecoder::ParDecode@ pardecoder = null;
-				if(tag.NoAttrib)
+				if((attr.IsEmpty() || attr=="*") && tag.NoAttrib)
 				{
 					if (tag.Value.IsEmpty()) return true;
 					
 					@pardecoder = @tag.ParData;
 					if(@pardecoder is null)
 					{
-						@pardecoder = @TextEngine::ParDecoder::ParDecode(tag.Value);
-						pardecoder.Decode();
+						@pardecoder = @this.CreatePardecode(tag.Value);
 						@tag.ParData = @pardecoder;
 					}
 			
 				}
 				else
 				{
+					if(attr == "*") attr = "c";
 					auto@ cAttr = @tag.ElemAttr.GetByName(attr);
 					if (@cAttr is null || cAttr.Value.IsEmpty()) return true;
 					@pardecoder = cAttr.ParData;
 					if(@pardecoder is null)
 					{
-						@pardecoder = @TextEngine::ParDecoder::ParDecode(cAttr.Value);
-						pardecoder.Decode();
+						@pardecoder = @this.CreatePardecode(cAttr.Value);
 						@cAttr.ParData = @pardecoder;
 					}
 	 
