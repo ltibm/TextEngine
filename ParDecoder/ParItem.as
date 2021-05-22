@@ -130,6 +130,7 @@ namespace TextEngine
 					
 							if (paritem.ParName == "(")
 							{
+								@lastPropObject = null;
 								if(this.BaseDecoder.Attributes.Flags & PDF_AllowMethodCall != 0)
 								{
 									Object@ globalFunc = null;
@@ -283,7 +284,7 @@ namespace TextEngine
 							{
 								string sname = current.Value.ToString();
 								@lastPropObject = @GetPropValue(sname, @vars, @localvars);
-								if(lastPropObject.PropType == PT_Empty)
+								if(@lastPropObject is null || lastPropObject.PropType == PT_Empty)
 								{
 									@currentitemvalue = null;
 								}
@@ -518,30 +519,34 @@ namespace TextEngine
 							{
 								if (xoperator.Value.ToString() == ".")
 								{
-									string name = currentitemvalue.ToString();
-									if(!name.IsEmpty())
+									if(this.BaseDecoder.Attributes.Flags & PDF_AllowSubMemberAccess != 0)
 									{
-										if(lastvalue !is null && (lastvalue.IsDictionaryObject() || lastvalue.IsDictionary()))
+										string name = currentitemvalue.ToString();
+										if(!name.IsEmpty())
 										{
-											if(lastvalue.IsDictionary())
+											if(lastvalue !is null && (lastvalue.IsDictionaryObject() || lastvalue.IsDictionary()))
 											{
-												dictionary dict = lastvalue;
-												@lastPropObject = @GetProp(name, dict);
-												@lastvalue = @lastPropObject.Value;
-											}
-											else if(lastvalue.IsDictionaryObject())
-											{
-												dictionary@ dict = @lastvalue;
-												@lastPropObject = @GetProp(name, @dict);
-												@lastvalue = @lastPropObject.Value;
-											}
+												if(lastvalue.IsDictionary())
+												{
+													dictionary dict = lastvalue;
+													@lastPropObject = @GetProp(name, dict);
+													@lastvalue = @lastPropObject.Value;
+												}
+												else if(lastvalue.IsDictionaryObject())
+												{
+													dictionary@ dict = @lastvalue;
+													@lastPropObject = @GetProp(name, @dict);
+													@lastvalue = @lastPropObject.Value;
+												}
 
-										}
-										else
-										{
-											@lastvalue = null;
+											}
+											else
+											{
+												@lastvalue = null;
+											}
 										}
 									}
+
 								}
 								else
 								{

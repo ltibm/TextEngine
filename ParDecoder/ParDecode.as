@@ -238,7 +238,7 @@ namespace TextEngine
 					value.Append(cur);
 
 				}
-				if (value.Length > 0)
+				if (value.Length > 0 || qutochar == '\'' || qutochar == '"')
 				{
 					innerItems.Add(this.Inner(value.ToString(), qutochar));
 				}
