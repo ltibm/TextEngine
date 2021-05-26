@@ -58,7 +58,7 @@ namespace TextEngine
 					{
 						list.insertLast(@this.inner[i]);
 					}
-					if(limit > 0 && list.length() > limit) break;
+					if(limit > 0 && list.length() >= limit) break;
 				}
 				return list;
 			}
