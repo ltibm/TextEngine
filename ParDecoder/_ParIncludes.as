@@ -10,3 +10,6 @@
 #include "PardecodeFlags"
 #include "ParItemAssignReturnType"
 #include "ParDecodeAttributes"
+#include "ParProperty"
+#include "ParTracerItem"
+#include "ParTracer"

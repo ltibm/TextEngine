@@ -94,7 +94,7 @@ namespace TextEngine
 			{
 				bool inspec = false;
 				bool inquot = false;
-				char qutochar = '\0';
+				char quotechar = '\0';
 				InnerItemsList@ innerItems = InnerItemsList();
 				StringBuilder@ value = StringBuilder();
 				bool valDotEntered = false;
@@ -131,7 +131,7 @@ namespace TextEngine
 						if (cur == '\'' || cur == '\"')
 						{
 							inquot = true;
-							qutochar = cur;
+							quotechar = cur;
 							continue;
 						}
 						if (cur == '+' || cur == '-' || cur == '*' ||
@@ -150,7 +150,7 @@ namespace TextEngine
 									value.Append(cur);
 									continue;
 								}
-								innerItems.Add(this.Inner(value.ToString(), qutochar));
+								innerItems.Add(this.Inner(value.ToString(), quotechar));
 								valDotEntered = false;
 								value.Clear();
 							}
@@ -205,7 +205,7 @@ namespace TextEngine
 								}
 								string valuestr = inner2.Value.ToString();
 								innerItems.Add(@inner2);
-								qutochar = '\0';
+								quotechar = '\0';
 								if (valuestr == "=" ||valuestr == "<=" || valuestr == ">=" || valuestr == "<" || valuestr == ">" || valuestr == "!=" || valuestr == "==")
 								{
 									this.pos = i;
@@ -223,7 +223,7 @@ namespace TextEngine
 					}
 					else
 					{
-						if (cur == qutochar)
+						if (cur == quotechar)
 						{
 							inquot = false;
 							continue;
@@ -238,9 +238,9 @@ namespace TextEngine
 					value.Append(cur);
 
 				}
-				if (value.Length > 0 || qutochar == '\'' || qutochar == '"')
+				if (value.Length > 0 || quotechar == '\'' || quotechar == '"')
 				{
-					innerItems.Add(this.Inner(value.ToString(), qutochar));
+					innerItems.Add(this.Inner(value.ToString(), quotechar));
 				}
 				this.pos = this.TextLength;
 				return innerItems;

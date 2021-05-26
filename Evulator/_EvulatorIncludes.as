@@ -1,6 +1,7 @@
 #include "BaseEvulator"
 #include "ParamEvulator"
 #include "EvulatorTypes"
+#include "EvulatorOptions"
 #include "IfEvulator"
 #include "IncludeEvulator"
 #include "BreakEvulator"
@@ -17,4 +18,5 @@
 #include "WhileEvulator"
 #include "DoEvulator"
 #include "TextTagCommandEvulator"
+#include "TextParamEvulator"
 

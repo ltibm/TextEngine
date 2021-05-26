@@ -2,6 +2,7 @@ namespace TextEngine
 {
 	class PropObject
 	{
+		string FullName;
 		Object@ Value;
 		int PropType = PT_Empty;
 		string StrIndex;
@@ -15,6 +16,7 @@ namespace TextEngine
 		PT_Property,
 		PT_Dictionary,
 		PT_KeyValues,
-		PT_Indis
+		PT_Indis,
+		PT_Method
 	}
 }

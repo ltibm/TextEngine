@@ -19,6 +19,13 @@ namespace TextEngine
 				}
 				
 			}
+			EvulatorOptions@ Options
+			{
+				get
+				{
+					return this.Evulator.EvulatorTypes.Options;
+				}
+			}
 			BaseEvulator()
 			{
 			  

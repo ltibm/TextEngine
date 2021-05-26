@@ -43,8 +43,7 @@ namespace TextEngine
 				}
 			}
 			private int pos = 0;
-			private bool in_noparse = false;
-			private string noparse_tag = "";
+			private bool directclose = false;
 			int TextLength
 			{
 				get const
@@ -192,8 +191,6 @@ namespace TextEngine
 					i = this.pos;
 				}
 				this.pos = 0;
-				this.in_noparse = false;
-				this.noparse_tag = "";
 				this.Evulator.IsParseMode = false;
 			}
 			private bool AllowContinue()
@@ -310,16 +307,24 @@ namespace TextEngine
 				@tagElement.BaseEvulator = @this.Evulator;
 				bool istextnode = false;
 				bool intag = false;
+				bool in_noparse = @parent !is null && (parent.HasFlag(TEF_NoParse) || parent.HasFlag(TEF_NoParse_AllowParam));
 				for (int i = start; i < this.TextLength; i++)
 				{
-					if (this.Evulator.NoParseEnabled && this.in_noparse)
+
+					char cur = this.Text[i];
+					char next = '\0';
+					if (i + 1 < this.TextLength)
+					{
+						next = this.Text[i + 1];
+					}
+					if (in_noparse && cur == this.Evulator.LeftTag && (next != this.Evulator.ParamChar || !parent.HasFlag(TEF_NoParse_AllowParam)))
 					{
 						istextnode = true;
 						tagElement.SetTextTag(true);
 					}
 					else
 					{
-						char cur = this.Text[i];
+
 						if (!inspec)
 						{
 							if (cur == this.Evulator.LeftTag)
@@ -391,23 +396,21 @@ namespace TextEngine
 					this.pos = i;
 					if (!intag || istextnode)
 					{
-						tagElement.Value = this.ParseInner();
+						tagElement.Value = this.ParseInner(@parent);
 						if(!AllowContinue()) return null;
-						if(!this.in_noparse && tagElement.ElementType == TextNode && tagElement.Value.IsEmpty())
+						if(!in_noparse && tagElement.ElementType == TextNode && tagElement.Value.IsEmpty())
 						{
 							
 							return null;
 						}
 						intag = false;
-						if (this.in_noparse)
+						if (this.directclose && in_noparse)
 						{
 							parent.AddElement(@tagElement);
 							TextElement@ elem = TextElement();
 							@elem.Parent = @parent;
-							elem.ElemName = this.noparse_tag;
+							elem.ElemName = parent.ElemName;
 							elem.SlashUsed = true;
-							this.in_noparse = false;
-							this.noparse_tag = "";
 							return @elem;
 						}
 						return @tagElement;
@@ -418,11 +421,6 @@ namespace TextEngine
 						if(tagElement.ElemName.IsEmpty()) return null;
 						if(!AllowContinue()) return null;
 						intag = false;
-						if (this.Evulator.NoParseEnabled && (tagElement.GetTagFlags() & TEF_NoParse) > 0)
-						{
-							this.in_noparse = true;
-							this.noparse_tag = tagElement.ElemName;
-						}
 						return @tagElement;
 
 					}
@@ -777,14 +775,15 @@ namespace TextEngine
 				}
 				this.pos = this.TextLength;
 			}
-			private string ParseInner(bool allowtrim = true)
+			private string ParseInner(TextElement@ parent, bool allowtrim = true)
 			{
 				StringBuilder@ text = StringBuilder();
 				bool inspec = false;
 				StringBuilder@ nparsetext = StringBuilder();
 				bool parfound = false;
 				StringBuilder@ waitspces = StringBuilder();
-
+				bool in_noparse = @parent !is null && (parent.HasFlag(TEF_NoParse) || parent.HasFlag(TEF_NoParse_AllowParam));
+				this.directclose = false;
 				for (int i = this.pos; i < this.TextLength; i++)
 				{
 					char cur = this.Text[i];
@@ -801,7 +800,8 @@ namespace TextEngine
 					}
 					if (cur == '\\')
 					{
-	                    if (this.Evulator.SpecialCharOption == SCT_AllowedAll ||  (this.Evulator.SpecialCharOption == SCT_AllowedClosedTagOnly && next == this.Evulator.RightTag))
+	                    if (this.Evulator.SpecialCharOption == SCT_AllowedAll ||  ((this.Evulator.SpecialCharOption & SCT_AllowedClosedTagOnly) != 0 && next == this.Evulator.RightTag)
+						||  ((this.Evulator.SpecialCharOption & SCT_AllowedNoParseWithParamTagOnly) != 0 && in_noparse &&  parent.HasFlag(TEF_NoParse_AllowParam)))
 						{
 							inspec = true;
 							continue;
@@ -827,7 +827,7 @@ namespace TextEngine
 					//    i = this.pos;
 					//    continue;
 					//}
-					if (this.Evulator.NoParseEnabled && this.in_noparse)
+					if (this.Evulator.NoParseEnabled && in_noparse)
 					{
 						if (parfound)
 						{
@@ -839,11 +839,12 @@ namespace TextEngine
 							}
 							else if (cur == this.Evulator.RightTag)
 							{
-								string stra = this.noparse_tag;
+								string stra = parent.ElemName;
 								if (nparsetext.ToString().ToLowercase() == '/' + stra.ToLowercase())
 								{
 									parfound = false;
 									this.pos = i;
+									this.directclose = true;
 									if (this.Evulator.TrimStartEnd && allowtrim)
 									{
 										string str = text.ToString();
@@ -866,6 +867,18 @@ namespace TextEngine
 						{
 							if (cur == this.Evulator.LeftTag)
 							{
+								if (next == this.Evulator.ParamChar && parent.HasFlag(TEF_NoParse_AllowParam))
+								{
+									this.pos = i - 1;
+									this.directclose = false;
+									if(this.Evulator.TrimStartEnd && allowtrim)
+									{
+										string str = text.ToString();
+										str = STRINGUTIL::Trim(str);
+										return str;
+									}
+									return text.ToString();
+								}
 								parfound = true;
 								continue;
 							}

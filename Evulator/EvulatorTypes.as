@@ -23,7 +23,7 @@ namespace TextEngine
 
 			EvulatorTypes()
 			{
-				
+				@this.m_options = @EvulatorOptions();
 			}
 			private ET_Instance@ param;
 			ET_Instance@ Param 
@@ -59,6 +59,14 @@ namespace TextEngine
 				set
 				{
 					@text = @value;
+				}
+			}
+			private EvulatorOptions@ m_options;
+			EvulatorOptions@ Options
+			{
+				get
+				{
+					return @this.m_options;
 				}
 			}
 			void SetType(string name, ET_Instance@ evulator)

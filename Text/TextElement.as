@@ -641,7 +641,10 @@ namespace TextEngine
 						if(@handler !is null) handler.OnRenderFinishPost(@this, @vars, @rResult);
 						return rResult;
 					}
-					result.TextContent = this.Value;
+					if(!this.BaseEvulator.ReturnEmptyIfTextEvulatorIsNull)
+					{
+						result.TextContent = this.Value;
+					}
 					return result;
 				}
 				if (this.ElementType == Parameter)

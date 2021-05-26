@@ -363,6 +363,7 @@ namespace TextEngine
 			TextEngine::ParDecoder::ParDecodeAttributes@ ParAttributes;
 			int IntertwinedBracketsState;
 			SpecialCharType SpecialCharOption;
+			bool ReturnEmptyIfTextEvulatorIsNull;
 			TextEngine::Evulator::EvulatorHandler@ GetHandler()
 			{
 				if(@this.EvulatorHandler is null) return null;
@@ -446,6 +447,7 @@ namespace TextEngine
 				this.TagInfos["noparse"].Flags = TEF_NoParse;
 				this.TagInfos["while"].Flags = TEF_NoAttributedTag;
 				this.TagInfos["do"].Flags = TEF_NoAttributedTag;
+				this.TagInfos["text"].Flags = TEF_NoParse_AllowParam;
 			}
 			void InitEvulator()
 			{
@@ -465,6 +467,7 @@ namespace TextEngine
 				@this.EvulatorTypes["unset"] = function() { return @TextEngine::Evulator::UnsetEvulator();};
 				@this.EvulatorTypes["while"] = function() { return @TextEngine::Evulator::WhileEvulator();};
 				@this.EvulatorTypes["do"] = function() { return @TextEngine::Evulator::DoEvulator();};
+				@this.EvulatorTypes["text"] = function() { return @TextEngine::Evulator::TextParamEvulator();};
 
 			}
 			void InitAmpMaps()

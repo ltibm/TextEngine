@@ -76,6 +76,7 @@ namespace TextEngine
 				tonum = tores;
 				TextEngine::Text::TextEvulateResult@ result = TextEngine::Text::TextEvulateResult();
 				this.CreateLocals();
+				int loop_count = 0;
 				for (int i = startnum; i < tonum; i += stepnum)
 				{
 					this.SetLocal(varname, Object_Int(i));
@@ -93,6 +94,7 @@ namespace TextEngine
 					{
 						break;
 					}
+					if (this.Options.Max_For_Loop != 0 && loop_count++ > this.Options.Max_For_Loop) break;
 				}
 				this.DestroyLocals();
 				result.Result = TextEngine::Text::EVULATE_TEXT;

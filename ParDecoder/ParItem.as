@@ -8,7 +8,13 @@ namespace TextEngine
 			{
 				@this.InnerItems = InnerItemsList();
 			}
-
+			ParDecodeAttributes@ Attributes
+			{
+				get
+				{
+					return @this.BaseDecoder.Attributes;
+				}
+			}
 			private ParDecode@ baseDecoder;
 			ParDecode@ BaseDecoder
 			{
@@ -68,6 +74,7 @@ namespace TextEngine
 				PropObject@ lastPropObject = null;
 				PropObject@ waitAssigmentObject = null;
 				int totalOp = 0;
+				string propertyStr = "";
 				if(this.IsObject())
 				{
 					@currentdict = dictionary();
@@ -133,14 +140,19 @@ namespace TextEngine
 								@lastPropObject = null;
 								if(this.BaseDecoder.Attributes.Flags & PDF_AllowMethodCall != 0)
 								{
+									if (propertyStr.Length() == 0) propertyStr = prevvalue;
+									else propertyStr +=  "." + prevvalue;
 									Object@ globalFunc = null;
-									if(checkglobal && this.BaseDecoder.Attributes.GlobalFunctions.get(prevvalue, @globalFunc) && @globalFunc !is null && globalFunc.IsFunction())
+									bool allowget = this.AllowAccessProperty(propertyStr, PT_Method);
+									bool iscalled = false;
+									if(allowget && checkglobal && this.BaseDecoder.Attributes.GlobalFunctions.get(prevvalue, @globalFunc) && @globalFunc !is null && globalFunc.IsFunction())
 									{
 											ObjectFunctionHandler@ func = null;
 											@func = @globalFunc;
 											@currentitemvalue = @func(@subresult.Result);
+											iscalled = true;
 									}
-									else
+									else if(allowget)
 									{
 										Object@ tempvalue = GetProp(prevvalue, @varnew).Value;
 										if(@tempvalue !is null && tempvalue.IsFunction())
@@ -149,6 +161,7 @@ namespace TextEngine
 											ObjectFunctionHandler@ func = null;
 											@func = @tempvalue;
 											@currentitemvalue = @func(@subresult.Result);
+											iscalled = true;
 										}
 										else
 										{
@@ -156,6 +169,11 @@ namespace TextEngine
 										}
 										@lastPropObject = null;
 									}
+									else
+									{
+									   @currentitemvalue = null;
+									}
+									if(allowget) this.AddToTrace(propertyStr, PT_Method, @currentitemvalue, iscalled);
 								}
 								else
 								{
@@ -166,9 +184,13 @@ namespace TextEngine
 							{
 								if(this.BaseDecoder.Attributes.Flags & PDF_AllowArrayAccess != 0)
 								{
+									if (propertyStr.Length() == 0) propertyStr = prevvalue;
+									else propertyStr +=  "." + prevvalue;
+									bool allowget = this.AllowAccessProperty(propertyStr, PT_Indis);
 									Object@ tempvalue = Object();
-									@lastPropObject = GetProp(prevvalue, @varnew);
-									if(lastPropObject.PropType != PT_Empty)
+									if(allowget) @lastPropObject = GetProp(prevvalue, @varnew);
+									else @lastPropObject = null;
+									if(@lastPropObject !is null && lastPropObject.PropType != PT_Empty)
 									{
 										@tempvalue = @lastPropObject.Value;
 									}
@@ -215,6 +237,7 @@ namespace TextEngine
 										@currentitemvalue = null;
 										@lastPropObject = null;
 									}
+									if(allowget) this.AddToTrace(propertyStr, PT_Indis, @currentitemvalue, @lastPropObject !is null && lastPropObject.PropType != PT_Empty);
 								}
 								else
 								{
@@ -283,7 +306,11 @@ namespace TextEngine
 							else if (!this.IsObject())
 							{
 								string sname = current.Value.ToString();
-								@lastPropObject = @GetPropValue(sname, @vars, @localvars);
+								
+								propertyStr = sname;
+								bool allowget = this.AllowAccessProperty(propertyStr, PT_Property);
+								if(allowget) @lastPropObject = @GetPropValue(sname, @vars, @localvars);
+								else @lastPropObject = null;
 								if(@lastPropObject is null || lastPropObject.PropType == PT_Empty)
 								{
 									@currentitemvalue = null;
@@ -296,6 +323,7 @@ namespace TextEngine
 										@currentitemvalue = null;
 									}
 								}
+								 if(allowget) this.AddToTrace(propertyStr, PT_Property, @currentitemvalue, @lastPropObject !is null && lastPropObject.PropType != PT_Empty);
 							
 							}
 						}
@@ -364,6 +392,8 @@ namespace TextEngine
 							if (totalOp <= 1 && (this.BaseDecoder.Attributes.Flags & PDF_AllowAssigment) != 0)
 							{
 								@waitAssigmentObject = @lastPropObject;
+								if(@waitAssigmentObject !is null) waitAssigmentObject.FullName = propertyStr;
+								propertyStr = "";
 								assigment = opstr;
 								@xoperator = null;
 								@previtem = null;
@@ -524,24 +554,33 @@ namespace TextEngine
 										string name = currentitemvalue.ToString();
 										if(!name.IsEmpty())
 										{
-											if(lastvalue !is null && (lastvalue.IsDictionaryObject() || lastvalue.IsDictionary()))
+											propertyStr +=  "." + name;
+											if(this.AllowAccessProperty(propertyStr, PT_Property))
 											{
-												if(lastvalue.IsDictionary())
+												if(@lastvalue !is null && (lastvalue.IsDictionaryObject() || lastvalue.IsDictionary()))
 												{
-													dictionary dict = lastvalue;
-													@lastPropObject = @GetProp(name, dict);
-													@lastvalue = @lastPropObject.Value;
+													if(lastvalue.IsDictionary())
+													{
+														dictionary dict = lastvalue;
+														@lastPropObject = @GetProp(name, dict);
+														@lastvalue = @lastPropObject.Value;
+													}
+													else if(lastvalue.IsDictionaryObject())
+													{
+														dictionary@ dict = @lastvalue;
+														@lastPropObject = @GetProp(name, @dict);
+														@lastvalue = @lastPropObject.Value;
+													}
+													this.AddToTrace(propertyStr, PT_Property, @lastvalue, @lastPropObject != null && lastPropObject.PropType != PT_Empty);
 												}
-												else if(lastvalue.IsDictionaryObject())
+												else
 												{
-													dictionary@ dict = @lastvalue;
-													@lastPropObject = @GetProp(name, @dict);
-													@lastvalue = @lastPropObject.Value;
+													@lastvalue = null;
 												}
-
 											}
 											else
 											{
+												@lastPropObject = null;
 												@lastvalue = null;
 											}
 										}
@@ -575,25 +614,35 @@ namespace TextEngine
 								{
 									totalOp--;
 									string name = currentitemvalue.ToString();
-									if(lastvalue !is null && (lastvalue.IsDictionaryObject() || lastvalue.IsDictionary()))
+									propertyStr += "." +name;
+									if (this.AllowAccessProperty(propertyStr, PT_Property))
 									{
-										if(lastvalue.IsDictionary())
+										if (@lastvalue !is null && (lastvalue.IsDictionaryObject() || lastvalue.IsDictionary()))
 										{
-											dictionary dict = lastvalue;
-											@lastPropObject = @GetProp(name, dict);
-											@lastvalue = @lastPropObject.Value;
+											if (lastvalue.IsDictionary())
+											{
+												dictionary dict = lastvalue;
+												@lastPropObject = @GetProp(name, dict);
+												@lastvalue = @lastPropObject.Value;
+											}
+											else if (lastvalue.IsDictionaryObject())
+											{
+												dictionary@ dict = @lastvalue;
+												@lastPropObject = @GetProp(name, @dict);
+												@lastvalue = @lastPropObject.Value;
+											}
+											this.AddToTrace(propertyStr, PT_Property, @lastvalue, @lastPropObject != null && lastPropObject.PropType != PT_Empty);
 										}
-										else if(lastvalue.IsDictionaryObject())
+										else
 										{
-											dictionary@ dict = @lastvalue;
-											@lastPropObject = @GetProp(name, @dict);
-											@lastvalue = @lastPropObject.Value;
+											@lastvalue = null;
 										}
 									}
 									else
 									{
+										@lastPropObject = null;
 										@lastvalue = null;
-									}
+									}									
 								}
 								else
 								{
@@ -654,7 +703,7 @@ namespace TextEngine
 					@waitvalue = null;
 					waitop = "";
 				}
-				if (@waitAssigmentObject !is null )
+				if (@waitAssigmentObject !is null && this.AllowAccessProperty(waitAssigmentObject.FullName, waitAssigmentObject.PropType, true))
 				{
 					AssignResult@ assignResult = null;
 					if(waitAssigmentObject.PropType != PT_Empty)
@@ -684,6 +733,7 @@ namespace TextEngine
 							if (assignResult !is null && assignResult.Success) @lastvalue = @assignResult.AssignedValue;
 							break;
 					}
+					if (assignResult !is null && assignResult.Success) this.AddToTrace(waitAssigmentObject.FullName, waitAssigmentObject.PropType, @assignResult.AssignedValue, true, true);
 				}
 				if (this.IsObject())
 				{
@@ -698,6 +748,32 @@ namespace TextEngine
 					cr.Result.Add(@lastvalue);
 				}
 				return cr;
+			}
+			private bool AllowAccessProperty(string propStr, int type, bool isassign = false)
+			{
+				if (@this.Attributes.RestrictedProperties !is null && this.Attributes.RestrictedProperties.getSize() > 0)
+				{
+					int prt = 0;
+					if(this.Attributes.RestrictedProperties.get(propStr, prt))
+					{
+						if ((isassign && (prt & PRT_RESTRICT_SET) != 0) || (!isassign && (prt & PRT_RESTRICT_GET) != 0)) return false;
+					}
+				}
+				return @this.Attributes.OnPropertyAccess is null || this.Attributes.OnPropertyAccess(@ParProperty(propStr, type, isassign));
+			}
+			private void AddToTrace(string propname, int type, Object@ value, bool accessed = false, bool isassign = false)
+			{
+				if(!this.Attributes.Tracing.Enabled)
+				{
+					return;
+				}
+				bool allowtrace = (!isassign && this.Attributes.Tracing.HasTraceThisType(type)) || (isassign && this.Attributes.Tracing.HasFlag(PTF_TRACE_ASSIGN));
+				if (!allowtrace) return;
+				auto@ traceitem = @ParTracerItem(propname, type);
+				traceitem.Accessed = accessed;
+				traceitem.IsAssign = isassign;
+				if(this.Attributes.Tracing.HasFlag(PTF_KEEP_VALUE)) @traceitem.Value = @value;
+				this.Attributes.Tracing.Add(@traceitem);
 			}
 		}	
 	}

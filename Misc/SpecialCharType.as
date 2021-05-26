@@ -15,7 +15,11 @@ namespace TextEngine
 			/// <summary>
 			/// e.g(\test\{} result: \test{ 
 			/// </summary>
-			SCT_AllowedClosedTagOnly = 3
+			SCT_AllowedClosedTagOnly = 4,
+			/// <summary>
+			/// e.g{text}\{}{&text} result: {}
+			/// </summary>
+			SCT_AllowedNoParseWithParamTagOnly = 8,
 		}
 	}
 }

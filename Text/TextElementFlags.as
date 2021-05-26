@@ -18,7 +18,8 @@ namespace TextEngine
 			TEF_DisableLastSlash = 1 << 4,
 			TEF_NoParse = 1 << 5,
 			TEF_AutoCloseIfSameTagFound  = 1 << 6,
-			TEF_PreventAutoCreation  = 1 << 7
+			TEF_PreventAutoCreation  = 1 << 7,
+			TEF_NoParse_AllowParam  = 1 << 8
 		}
 	}
 }
