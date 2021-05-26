@@ -49,6 +49,19 @@ namespace TextEngine
 				}
 				return null;
 			}
+			array<ParTracerItem@> GetFields(string name, uint limit = 0)
+			{
+				array<ParTracerItem@> list;
+				for (uint i = 0; i < this.inner.length(); i++)
+				{
+					if(this.inner[i].Name == name)
+					{
+						list.insertLast(@this.inner[i]);
+					}
+					if(limit == 0 && list.length() > limit) break;
+				}
+				return list;
+			}
 			bool HasFlag(int flag)
 			{
 				return (this.Flags & flag) != 0;
