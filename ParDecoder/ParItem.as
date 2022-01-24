@@ -188,7 +188,7 @@ namespace TextEngine
 									else propertyStr +=  "." + prevvalue;
 									bool allowget = this.AllowAccessProperty(propertyStr, PT_Indis);
 									Object@ tempvalue = Object();
-									if(allowget) @lastPropObject = GetProp(prevvalue, @varnew);
+									if(allowget) @lastPropObject = GetPropB(prevvalue, @varnew, @localvars);
 									else @lastPropObject = null;
 									if(@lastPropObject !is null && lastPropObject.PropType != PT_Empty)
 									{

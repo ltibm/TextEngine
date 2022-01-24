@@ -283,6 +283,7 @@ namespace TextEngine
 		}
 		return @results;
 	}
+
 	PropObject@ GetProp(string item, dictionary@ items)
 	{
 		PropObject@ propObj = @PropObject();
@@ -303,6 +304,19 @@ namespace TextEngine
 		@propObj.Value = @obj;
 		propObj.StrIndex = item;
 		return propObj;
+	}
+	PropObject@ GetPropB(string item, Object@ vars, Object@ localvars)
+	{
+		PropObject@ res = @PropObject();
+		if(@localvars !is null)
+		{
+			@res = @GetProp(item, @localvars);
+		}
+		if(@res is null || res.PropType == PT_Empty)
+		{
+			@res = @GetProp(item, @vars);
+		}
+		return res;
 	}
 	PropObject@ GetPropEx(string item, Object@ items)
 	{
